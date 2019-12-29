@@ -35,7 +35,7 @@ def get_target_hist(image_path):
 
 
 def main():
-    image_path = 'frames/cellphone/ground/image0203.png'
+    image_path = 'image0203.png'
     target_hist = get_target_hist(image_path)
 
 
