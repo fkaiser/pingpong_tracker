@@ -24,7 +24,7 @@ def convert_to_grayscale(img):
 def get_target_hist(image_path):
     im = cv2.imread('image0203.png')
     im_gray = convert_to_grayscale(im)
-    target_RO = get_ROI(im_gray)
+    target_ROI = get_ROI(im_gray)
     plt.subplot(121), plt.imshow(target_ROI['image'], 'gray')
     plt.subplot(122)
     target_hist = dict()
