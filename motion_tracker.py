@@ -1,0 +1,38 @@
+import cv2
+import numpy as np
+from matplotlib import pyplot as plt
+
+
+def get_ROI(img):
+    # Select ROI
+    fromCenter = False
+    r = cv2.selectROI(img, fromCenter)
+
+    # Crop image
+    imCrop = img[int(r[1]):int(r[1]+r[3]), int(r[0]):int(r[0]+r[2])]
+    return imCrop
+
+
+def convert_to_grayscale(img):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    return gray
+
+
+def get_target_hist(image_path):
+    im = cv2.imread('image0203.png')
+    im_gray = convert_to_grayscale(im)
+    im_ROI = get_ROI(im_gray)
+    hist_ROI = cv2.calcHist([im_ROI],[0],mask=None,histSize=[256],ranges=[0,256])
+    plt.subplot(121), plt.imshow(im_ROI, 'gray')
+    plt.subplot(122), plt.plot(hist_ROI)
+    plt.show()
+    return hist_gray
+
+
+def main():
+    image_path = 'frames/cellphone/ground/image0203.png'
+    target_hist = get_target_hist(image_path)
+
+
+if __name__ == '__main__':
+    main()
