@@ -22,9 +22,11 @@ def get_target_hist(image_path):
     im = cv2.imread('image0203.png')
     im_gray = convert_to_grayscale(im)
     im_ROI = get_ROI(im_gray)
-    hist_ROI = cv2.calcHist([im_ROI],[0],mask=None,histSize=[256],ranges=[0,256])
     plt.subplot(121), plt.imshow(im_ROI, 'gray')
-    plt.subplot(122), plt.plot(hist_ROI)
+    plt.subplot(122)
+    target_hist = dict()
+    target_hist['values'], target_hist['bins'], _ = plt.hist(im_ROI.ravel(),50,[0,256])
+    plt.xlim(0,256)
     plt.show()
     return hist_gray
 
