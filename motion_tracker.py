@@ -6,20 +6,29 @@ from matplotlib import pyplot as plt
 class motionTracker:
 
     def __init__(self, image_path, n_particles=10, sigma_init_pos=20,
-                 sigma_init_vel=1, process_noise_sigma=10, n_steps=100, n_states=4):
+                 sigma_init_vel=1, process_noise_pos_sigma=4,
+                 process_noise_vel_sigma=1, n_steps=100, n_states=4):
         self.n_particles = n_particles
         self.sigma_init_pos = sigma_init_pos
         self.sigma_init_vel = sigma_init_vel
-        self.process_noise_sigma = process_noise_sigma
+        self.process_noise_pos_sigma = process_noise_pos_sigma
+        self.process_noise_vel_sigma = process_noise_vel_sigma
         self.n_steps = n_steps
         self.n_states = n_states
         self.compute_init_variance()
+        self.compute_process_noise_variance()
         self.image_path = image_path
         self.image = self.load_image(self.image_path)
         self.target_ROI = self.get_ROI(self.image)
         self.get_target_hist()
         self.init_particles()
-        self.show_particles()
+        self.show_particles(particles=self.X_p[0, :, :])
+
+    def compute_process_noise_variance(self):
+        self.V_process_noise = np.diag([self.process_noise_pos_sigma,
+                                        self.process_noise_pos_sigma,
+                                        self.process_noise_vel_sigma,
+                                        self.process_noise_vel_sigma])
 
     def compute_init_variance(self):
         self.P0_init = np.diag([self.sigma_init_pos, self.sigma_init_pos,
@@ -39,6 +48,7 @@ class motionTracker:
                       'height': height, width: 'width',
                       'target_midpoint_x': int(r[0]) + height / 2,
                       'target_midpoint_y': int(r[1]) + width / 2}
+        cv2.destroyAllWindows()
         return target_ROI
 
     def load_image(self, image_path):
@@ -69,29 +79,43 @@ class motionTracker:
         self.X_p[0, :, :] = mean_init + \
             np.dot(self.P0_init, np.random.normal(
                 size=(self.n_states, self.n_particles)))
+        self.current_state = self.X_p[0, :, :]
 
-    def show_particles(self):
+    def propagate_particles(self, dt):
+        A = np.identity(self.n_states)
+        A[0, 2] = dt
+        A[1, 3] = dt
+        self.current_state = np.dot(A, self.current_state) + \
+            np.dot(self.V_process_noise, np.random.normal(
+                size=(self.n_states, self.n_particles)))
+
+    def show_particles(self, particles):
         # Radius of circle
         radius = 10
 
         # Red color in BGR
         color = (0, 0, 255)
-        center_list = [(int(self.X_p[0, 0, i]), int(self.X_p[0, 1, i]))
+        center_list = [(int(particles[0, i]), int(particles[1, i]))
                        for i in range(self.n_particles)]
+        image_cp = self.image.copy()
         for center_point in center_list:
-            cv2.circle(self.image, center_point,
+            cv2.circle(image_cp, center_point,
                        radius=radius, color=color)
 
         window_name = 'particles'
 
         # Displaying the image
-        cv2.imshow(window_name, self.image)
+        cv2.imshow(window_name, image_cp)
         cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
 
 def main():
     image_path = 'image0203.png'
     ping_pong_tracker = motionTracker(image_path=image_path)
+    for i in range(50):
+        ping_pong_tracker.propagate_particles(dt=1/30)
+        ping_pong_tracker.show_particles(particles=ping_pong_tracker.current_state)
 
 
 if __name__ == '__main__':
