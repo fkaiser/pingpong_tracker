@@ -1,6 +1,11 @@
 import cv2
+import glob
+import json
+
 import numpy as np
+
 from matplotlib import pyplot as plt
+from pathlib import Path
 
 
 class motionTracker:
@@ -110,12 +115,32 @@ class motionTracker:
         cv2.destroyAllWindows()
 
 
+class imageSamples:
+
+    def __init__(self, path_to_images, image_formater='.png'):
+        self.path_to_images = path_to_images
+        self.framelist = sorted(glob.glob(self.path_to_images + '/*' +
+                                          image_formater))
+        self.read_timestamps()
+        self.image_timestamp_list = list(zip(self.framelist, self.timestamps))
+
+    def read_timestamps(self, filename='timestamps.json'):
+        json_file_path = Path(self.path_to_images + '/' + filename)
+        with json_file_path.open() as json_file:
+            data = json.load(json_file)
+            self.timestamps = [float(time_stamp['pkt_pts_time'])
+                               for time_stamp in data['frames']]
+
+
 def main():
     image_path = 'image0203.png'
+    image_folder = 'images_samples'
+    images = imageSamples(path_to_images=image_folder)
     ping_pong_tracker = motionTracker(image_path=image_path)
     for i in range(50):
         ping_pong_tracker.propagate_particles(dt=1/30)
-        ping_pong_tracker.show_particles(particles=ping_pong_tracker.current_state)
+        ping_pong_tracker.show_particles(
+            particles=ping_pong_tracker.current_state)
 
 
 if __name__ == '__main__':
