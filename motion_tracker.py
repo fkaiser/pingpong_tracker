@@ -12,7 +12,7 @@ class motionTracker:
 
     def __init__(self, image_path, n_particles=10, sigma_init_pos=20,
                  sigma_init_vel=1, process_noise_pos_sigma=4,
-                 process_noise_vel_sigma=1, n_steps=100, n_states=4):
+                 process_noise_vel_sigma=1, n_steps=100, n_states=4, n_bins=50):
         self.n_particles = n_particles
         self.sigma_init_pos = sigma_init_pos
         self.sigma_init_vel = sigma_init_vel
@@ -20,6 +20,7 @@ class motionTracker:
         self.process_noise_vel_sigma = process_noise_vel_sigma
         self.n_steps = n_steps
         self.n_states = n_states
+        self.n_bins = n_bins
         self.particle_boxes = np.zeros((4, self.n_particles))
         self.compute_init_variance()
         self.compute_process_noise_variance()
@@ -71,7 +72,9 @@ class motionTracker:
         plt.subplot(122)
         self.target_hist = dict()
         self.target_hist['values'], self.target_hist['bins'], _ = plt.hist(
-            self.target_ROI['image_gray'].ravel(), 50, [0, 256])
+            self.target_ROI['image_gray'].ravel(), self.n_bins, [0, 256])
+        import pdb; pdb.set_trace()
+        target_hist = np.histogram(self.target_ROI['image_gray'].ravel(), bins=self.n_bins, range=(0,256))
         plt.xlim(0, 256)
         plt.show()
 
