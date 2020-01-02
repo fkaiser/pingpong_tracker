@@ -28,6 +28,10 @@ class motionTracker:
         self.get_target_hist()
         self.init_particles()
         self.show_particles(particles=self.X_p[0, :, :])
+    
+    def get_new_image(self, image_path):
+        self.image_path = image_path
+        self.image = self.load_image(self.image_path)
 
     def compute_process_noise_variance(self):
         self.V_process_noise = np.diag([self.process_noise_pos_sigma,
@@ -122,7 +126,7 @@ class imageSamples:
         self.framelist = sorted(glob.glob(self.path_to_images + '/*' +
                                           image_formater))
         self.read_timestamps()
-        self.image_timestamp_list = list(zip(self.framelist, self.timestamps))
+        self.image_dt_list = list(zip(self.framelist, self.dt))
 
     def read_timestamps(self, filename='timestamps.json'):
         json_file_path = Path(self.path_to_images + '/' + filename)
@@ -130,15 +134,17 @@ class imageSamples:
             data = json.load(json_file)
             self.timestamps = [float(time_stamp['pkt_pts_time'])
                                for time_stamp in data['frames']]
+            self.dt = np.diff(self.timestamps)
+            self.dt = np.insert(self.dt, 0, 0.0)
 
 
 def main():
-    image_path = 'image0203.png'
     image_folder = 'images_samples'
     images = imageSamples(path_to_images=image_folder)
-    ping_pong_tracker = motionTracker(image_path=image_path)
-    for i in range(50):
-        ping_pong_tracker.propagate_particles(dt=1/30)
+    ping_pong_tracker = motionTracker(image_path=images.image_dt_list[0][0])
+    for (image_path_m, dt) in images.image_dt_list[1:]:
+        ping_pong_tracker.get_new_image(image_path=image_path_m)
+        ping_pong_tracker.propagate_particles(dt=dt)
         ping_pong_tracker.show_particles(
             particles=ping_pong_tracker.current_state)
 
