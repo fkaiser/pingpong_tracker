@@ -20,6 +20,7 @@ class motionTracker:
         self.process_noise_vel_sigma = process_noise_vel_sigma
         self.n_steps = n_steps
         self.n_states = n_states
+        self.particle_boxes = np.zeros((4, self.n_particles))
         self.compute_init_variance()
         self.compute_process_noise_variance()
         self.image_path = image_path
@@ -28,7 +29,7 @@ class motionTracker:
         self.get_target_hist()
         self.init_particles()
         self.show_particles(particles=self.X_p[0, :, :])
-    
+
     def get_new_image(self, image_path):
         self.image_path = image_path
         self.image = self.load_image(self.image_path)
@@ -54,7 +55,7 @@ class motionTracker:
         im_crop = img[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])]
         target_ROI = {'image': im_crop, 'image_gray':
                       self.convert_to_grayscale(im_crop),
-                      'height': height, width: 'width',
+                      'height': height, 'width': width,
                       'target_midpoint_x': int(r[0]) + height / 2,
                       'target_midpoint_y': int(r[1]) + width / 2}
         cv2.destroyAllWindows()
@@ -98,6 +99,17 @@ class motionTracker:
             np.dot(self.V_process_noise, np.random.normal(
                 size=(self.n_states, self.n_particles)))
 
+    def update_particles_histograms(self):
+        for i in range(self.n_particles):
+            self.particle_boxes[:, i] = np.array([self.current_state[0, i] -
+                                                  self.target_ROI['height'] / 2,
+                                                  self.current_state[1, i] -
+                                                  self.target_ROI['width'] / 2,
+                                                  self.current_state[0, i] +
+                                                  self.target_ROI['height'] / 2,
+                                                  self.current_state[1, i] +
+                                                  self.target_ROI['width'] / 2]).transpose()
+
     def show_particles(self, particles):
         # Radius of circle
         radius = 10
@@ -106,10 +118,21 @@ class motionTracker:
         color = (0, 0, 255)
         center_list = [(int(particles[0, i]), int(particles[1, i]))
                        for i in range(self.n_particles)]
+        start_point_list = [(int(self.particle_boxes[0, i]),
+                             int(self.particle_boxes[1, i]))
+                            for i in range(self.particle_boxes.shape[1])]
+        end_point_list = [(int(self.particle_boxes[2, i]),
+                           int(self.particle_boxes[3, i]))
+                          for i in range(self.particle_boxes.shape[1])]
+
         image_cp = self.image.copy()
-        for center_point in center_list:
+        thickness = 2
+        color_blue = (255, 0, 0)
+        for center_point, start_point, end_point in zip(center_list, start_point_list, end_point_list):
             cv2.circle(image_cp, center_point,
                        radius=radius, color=color)
+            cv2.rectangle(
+                image_cp, start_point, end_point, color=color_blue, thickness=thickness)
 
         window_name = 'particles'
 
@@ -145,6 +168,7 @@ def main():
     for (image_path_m, dt) in images.image_dt_list[1:]:
         ping_pong_tracker.get_new_image(image_path=image_path_m)
         ping_pong_tracker.propagate_particles(dt=dt)
+        ping_pong_tracker.update_particles_histograms()
         ping_pong_tracker.show_particles(
             particles=ping_pong_tracker.current_state)
 
