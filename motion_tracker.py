@@ -66,15 +66,11 @@ class motionTracker:
         return im
 
     def get_target_hist(self):
-        im_gray = self.convert_to_grayscale(self.image)
         plt.subplot(121), plt.imshow(self.target_ROI['image_gray'], 'gray')
         plt.subplot(122)
         self.target_hist = dict()
         self.target_hist['values'], self.target_hist['bins'], _ = plt.hist(
             self.target_ROI['image_gray'].ravel(), self.n_bins, [0, 256])
-        target_hist = np.histogram(
-            self.target_ROI['image_gray'].ravel(), bins=self.n_bins, range=(0, 256))
-        plt.xlim(0, 256)
         plt.show()
 
     @staticmethod
@@ -95,6 +91,7 @@ class motionTracker:
         self.particle_boxes = np.zeros((4, self.n_particles))
         self.particle_histograms = np.zeros(
             (self.target_hist['values'].shape[0], self.n_particles))
+        self.particle_betas = np.ones((1, self.n_particles)) * 1 / self.n_particles
 
     def propagate_particles(self, dt):
         A = np.identity(self.n_states)
@@ -103,6 +100,23 @@ class motionTracker:
         self.current_state = np.dot(A, self.current_state) + \
             np.dot(self.V_process_noise, np.random.normal(
                 size=(self.n_states, self.n_particles)))
+
+    def update_particles(self):
+        self.update_particles_histograms()
+        self.compute_particle_betas()
+
+    def compute_particle_betas(self):
+        # Normalize histograms
+        particle_histograms_n = self.particle_histograms / \
+            self.particle_histograms.sum(axis=0)
+        target_histograms_n = self.target_hist['values'].reshape(-1, 1) / \
+            self.target_hist['values'].sum(axis=0)
+
+        # Compute hellinger distance
+        d_hellinger = np.sqrt(1 - np.sqrt(particle_histograms_n * 
+                              target_histograms_n).sum(axis=0))
+        # Normalize to get betas
+        self.particle_betas = d_hellinger / d_hellinger.sum()
 
     def update_particles_histograms(self):
         image_grayscale = self.convert_to_grayscale(self.image)
@@ -181,7 +195,7 @@ def main():
     for (image_path_m, dt) in images.image_dt_list[1:]:
         ping_pong_tracker.get_new_image(image_path=image_path_m)
         ping_pong_tracker.propagate_particles(dt=dt)
-        ping_pong_tracker.update_particles_histograms()
+        ping_pong_tracker.update_particles()
         ping_pong_tracker.show_particles(
             particles=ping_pong_tracker.current_state)
 
