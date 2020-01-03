@@ -104,6 +104,7 @@ class motionTracker:
     def update_particles(self):
         self.update_particles_histograms()
         self.compute_particle_betas()
+        self.resample_particles()
 
     def compute_particle_betas(self):
         # Normalize histograms
@@ -117,6 +118,15 @@ class motionTracker:
                               target_histograms_n).sum(axis=0))
         # Normalize to get betas
         self.particle_betas = d_hellinger / d_hellinger.sum()
+    
+    def resample_particles(self):
+        current_state_prior = self.current_state.copy()
+        beta_cumsum = np.cumsum(self.particle_betas)
+        for i in range(self.n_particles):
+            randuni = np.random.uniform()
+            res = np.asarray(randuni <= beta_cumsum).nonzero()
+            index = res[0][0] if res[0].size > 0 else 0
+            self.current_state[:, i] = current_state_prior[:, index]
 
     def update_particles_histograms(self):
         image_grayscale = self.convert_to_grayscale(self.image)
