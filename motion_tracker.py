@@ -21,7 +21,6 @@ class motionTracker:
         self.n_steps = n_steps
         self.n_states = n_states
         self.n_bins = n_bins
-        self.particle_boxes = np.zeros((4, self.n_particles))
         self.compute_init_variance()
         self.compute_process_noise_variance()
         self.image_path = image_path
@@ -73,8 +72,8 @@ class motionTracker:
         self.target_hist = dict()
         self.target_hist['values'], self.target_hist['bins'], _ = plt.hist(
             self.target_ROI['image_gray'].ravel(), self.n_bins, [0, 256])
-        import pdb; pdb.set_trace()
-        target_hist = np.histogram(self.target_ROI['image_gray'].ravel(), bins=self.n_bins, range=(0,256))
+        target_hist = np.histogram(
+            self.target_ROI['image_gray'].ravel(), bins=self.n_bins, range=(0, 256))
         plt.xlim(0, 256)
         plt.show()
 
@@ -93,6 +92,9 @@ class motionTracker:
             np.dot(self.P0_init, np.random.normal(
                 size=(self.n_states, self.n_particles)))
         self.current_state = self.X_p[0, :, :]
+        self.particle_boxes = np.zeros((4, self.n_particles))
+        self.particle_histograms = np.zeros(
+            (self.target_hist['values'].shape[0], self.n_particles))
 
     def propagate_particles(self, dt):
         A = np.identity(self.n_states)
@@ -103,6 +105,7 @@ class motionTracker:
                 size=(self.n_states, self.n_particles)))
 
     def update_particles_histograms(self):
+        image_grayscale = self.convert_to_grayscale(self.image)
         for i in range(self.n_particles):
             self.particle_boxes[:, i] = np.array([self.current_state[0, i] -
                                                   self.target_ROI['height'] / 2,
@@ -112,6 +115,13 @@ class motionTracker:
                                                   self.target_ROI['height'] / 2,
                                                   self.current_state[1, i] +
                                                   self.target_ROI['width'] / 2]).transpose()
+            im_crop = image_grayscale[int(self.particle_boxes[1, i]):
+                                      int(self.particle_boxes[3, i]),
+                                      int(self.particle_boxes[0, i]):
+                                      int(self.particle_boxes[2, i])]
+            self.particle_histograms[:, i], _ = np.histogram(im_crop.ravel(),
+                                                             bins=self.n_bins,
+                                                             range=(0, 256))
 
     def show_particles(self, particles):
         # Radius of circle
