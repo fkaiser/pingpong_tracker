@@ -6,21 +6,25 @@ import numpy as np
 
 from matplotlib import pyplot as plt
 from pathlib import Path
+from scipy.stats import norm
 
 
 class motionTracker:
 
-    def __init__(self, image_path, n_particles=10, sigma_init_pos=20,
-                 sigma_init_vel=1, process_noise_pos_sigma=4,
-                 process_noise_vel_sigma=1, n_steps=100, n_states=4, n_bins=50):
+    def __init__(self, image_path, n_particles=100, sigma_init_pos=40,
+                 sigma_init_vel=1, process_noise_pos_sigma=10,
+                 process_noise_vel_sigma=5, measurement_noise=20, n_steps=100,
+                 n_states=4, n_bins=50, show_extended=False):
         self.n_particles = n_particles
         self.sigma_init_pos = sigma_init_pos
         self.sigma_init_vel = sigma_init_vel
         self.process_noise_pos_sigma = process_noise_pos_sigma
         self.process_noise_vel_sigma = process_noise_vel_sigma
+        self.measurement_noise_sigma = measurement_noise
         self.n_steps = n_steps
         self.n_states = n_states
         self.n_bins = n_bins
+        self.show_extended = show_extended
         self.compute_init_variance()
         self.compute_process_noise_variance()
         self.image_path = image_path
@@ -91,12 +95,13 @@ class motionTracker:
         self.particle_boxes = np.zeros((4, self.n_particles))
         self.particle_histograms = np.zeros(
             (self.target_hist['values'].shape[0], self.n_particles))
-        self.particle_betas = np.ones((1, self.n_particles)) * 1 / self.n_particles
+        self.particle_betas = np.ones(
+            (1, self.n_particles)) * 1 / self.n_particles
 
     def propagate_particles(self, dt):
         A = np.identity(self.n_states)
-        A[0, 2] = dt
-        A[1, 3] = dt
+        A[0, 2] = dt*0
+        A[1, 3] = dt*0
         self.current_state = np.dot(A, self.current_state) + \
             np.dot(self.V_process_noise, np.random.normal(
                 size=(self.n_states, self.n_particles)))
@@ -107,25 +112,32 @@ class motionTracker:
         self.resample_particles()
 
     def compute_particle_betas(self):
-        # Normalize histograms
-        particle_histograms_n = self.particle_histograms / \
-            self.particle_histograms.sum(axis=0)
-        target_histograms_n = self.target_hist['values'].reshape(-1, 1) / \
-            self.target_hist['values'].sum(axis=0)
+        d_hellinger = self.compute_hellinger_distance(self.particle_histograms,
+                                                      self.target_hist['values'])
+        # Compute probability density values
+        normal_density_values = norm.pdf(d_hellinger, 0, 1 / self.measurement_noise_sigma)
+        self.particle_betas = normal_density_values / normal_density_values.sum()
 
-        # Compute hellinger distance
-        d_hellinger = np.sqrt(1 - np.sqrt(particle_histograms_n * 
-                              target_histograms_n).sum(axis=0))
-        # Normalize to get betas
-        self.particle_betas = d_hellinger / d_hellinger.sum()
-    
+    def compute_hellinger_distance(self, h_measured, h_target):
+        # Normalize histograms
+        h_measured_n = h_measured / h_measured.sum(axis=0)
+        h_target_n = h_target/ h_target.sum(axis=0)
+
+        h_measured_n = h_measured_n.reshape(-1, 1) if len(h_measured_n.shape) < 2 else h_measured_n
+        h_target_n = h_target_n.reshape(-1, 1) if len(h_target_n.shape) < 2 else h_target_n
+        d_hellinger = np.sqrt(1 - np.sqrt(h_measured_n *
+                                          h_target_n).sum(axis=0))
+        return d_hellinger
+
     def resample_particles(self):
         current_state_prior = self.current_state.copy()
         beta_cumsum = np.cumsum(self.particle_betas)
+        index_selected = []
         for i in range(self.n_particles):
             randuni = np.random.uniform()
             res = np.asarray(randuni <= beta_cumsum).nonzero()
             index = res[0][0] if res[0].size > 0 else 0
+            index_selected.append(index)
             self.current_state[:, i] = current_state_prior[:, index]
 
     def update_particles_histograms(self):
@@ -146,6 +158,26 @@ class motionTracker:
             self.particle_histograms[:, i], _ = np.histogram(im_crop.ravel(),
                                                              bins=self.n_bins,
                                                              range=(0, 256))
+
+            if self.show_extended:
+                d_hellinger = self.compute_hellinger_distance(self.particle_histograms[:, i],
+                                                            self.target_hist['values'])
+                plt.subplot(2, 2, 1)
+                plt.imshow(self.target_ROI['image_gray'], 'gray')
+                plt.title('target')
+                plt.subplot(2, 2, 2)
+                plt.imshow(im_crop, 'gray')
+                plt.title(str(i + 1) + '. particle')
+                plt.subplot(2, 2, 3)
+                plt.hist(self.target_hist['bins'][:-1], weights=self.target_hist['values'],
+                        bins=self.target_hist['bins'], label='target')
+                plt.legend()
+                plt.subplot(2, 2, 4)
+                plt.hist(self.target_hist['bins'][:-1], weights=self.particle_histograms[:, i],
+                        bins=self.target_hist['bins'], label=str(i + 1) + '. particle, d_hel={0:0.2f}'.format(d_hellinger[0]))
+                plt.legend()
+                plt.show()
+                plt.cla()
 
     def show_particles(self, particles):
         # Radius of circle
@@ -201,8 +233,10 @@ class imageSamples:
 def main():
     image_folder = 'images_samples'
     images = imageSamples(path_to_images=image_folder)
-    ping_pong_tracker = motionTracker(image_path=images.image_dt_list[0][0])
-    for (image_path_m, dt) in images.image_dt_list[1:]:
+    start_image = 52
+    ping_pong_tracker = motionTracker(
+        image_path=images.image_dt_list[start_image][0])
+    for (image_path_m, dt) in images.image_dt_list[start_image + 1:]:
         ping_pong_tracker.get_new_image(image_path=image_path_m)
         ping_pong_tracker.propagate_particles(dt=dt)
         ping_pong_tracker.update_particles()
