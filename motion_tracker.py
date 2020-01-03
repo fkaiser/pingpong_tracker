@@ -11,9 +11,9 @@ from scipy.stats import norm
 
 class motionTracker:
 
-    def __init__(self, image_path, n_particles=100, sigma_init_pos=40,
-                 sigma_init_vel=1, process_noise_pos_sigma=10,
-                 process_noise_vel_sigma=5, measurement_noise=20, n_steps=100,
+    def __init__(self, image_path, n_particles=30, sigma_init_pos=40,
+                 sigma_init_vel=1, process_noise_pos_sigma=20,
+                 process_noise_vel_sigma=8, measurement_noise=20, n_steps=100,
                  n_states=4, n_bins=50, show_extended=False):
         self.n_particles = n_particles
         self.sigma_init_pos = sigma_init_pos
@@ -100,8 +100,8 @@ class motionTracker:
 
     def propagate_particles(self, dt):
         A = np.identity(self.n_states)
-        A[0, 2] = dt*0
-        A[1, 3] = dt*0
+        A[0, 2] = dt
+        A[1, 3] = dt
         self.current_state = np.dot(A, self.current_state) + \
             np.dot(self.V_process_noise, np.random.normal(
                 size=(self.n_states, self.n_particles)))
@@ -231,9 +231,9 @@ class imageSamples:
 
 
 def main():
-    image_folder = 'images_samples'
+    image_folder = 'images_samples/black_ball'
     images = imageSamples(path_to_images=image_folder)
-    start_image = 52
+    start_image = 10
     ping_pong_tracker = motionTracker(
         image_path=images.image_dt_list[start_image][0])
     for (image_path_m, dt) in images.image_dt_list[start_image + 1:]:
