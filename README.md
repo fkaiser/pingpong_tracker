@@ -20,6 +20,6 @@ If you want to play around with the different mean shift values or standard devi
 <a href="https://www.codecogs.com/eqnedit.php?latex=p_u(\vec{x_t})=&space;\frac{n_u(\vec{x_t})}{\sum_{j=1}^m&space;n_j(\vec{x_t}))}\newline&space;n_u:=&space;\text{Bin&space;count&space;of&space;bin&space;\textit{u}}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?p_u(\vec{x_t})=&space;\frac{n_u(\vec{x_t})}{\sum_{j=1}^m&space;n_j(\vec{x_t}))}\newline&space;n_u:=&space;\text{Bin&space;count&space;of&space;bin&space;\textit{u}}" title="p_u(\vec{x_t})= \frac{n_u(\vec{x_t})}{\sum_{j=1}^m n_j(\vec{x_t}))}\newline n_u:= \text{Bin count of bin \textit{u}}" /></a>
 
 The following two plots show the difference of histograms of the cropped image of the target and a particle respectively the corresponding Hellinger distance value. As can be seen in the first example below even if the ball is almost not part of the cropped image anymore the value of the Hellinger distance is still below 0.5. This is due to the fact that the background on both images is still the same or really similar. The second image shows a particle where the ball is in the cropped image with a major part. Thus the Hellinger distance is smaller.
-![half ball](images_README/half_ball.png)
-![complete ball](images_README/half_ball.png)
+![half_ball](images_README/half_ball.png)
+![complete_ball](images_README/complete_ball.png)
 
