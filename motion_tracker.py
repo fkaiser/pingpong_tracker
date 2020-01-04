@@ -11,9 +11,9 @@ from scipy.stats import norm
 
 class motionTracker:
 
-    def __init__(self, image_path, n_particles=30, sigma_init_pos=40,
-                 sigma_init_vel=1, process_noise_pos_sigma=20,
-                 process_noise_vel_sigma=8, measurement_noise=20, n_steps=100,
+    def __init__(self, image_path, n_particles=100, sigma_init_pos=40,
+                 sigma_init_vel=1, process_noise_pos_sigma=25,
+                 process_noise_vel_sigma=20, measurement_noise=20, n_steps=100,
                  n_states=4, n_bins=50, show_extended=False):
         self.n_particles = n_particles
         self.sigma_init_pos = sigma_init_pos
@@ -97,6 +97,7 @@ class motionTracker:
             (self.target_hist['values'].shape[0], self.n_particles))
         self.particle_betas = np.ones(
             (1, self.n_particles)) * 1 / self.n_particles
+        self.compute_MMSE_estimate()
 
     def propagate_particles(self, dt):
         A = np.identity(self.n_states)
@@ -110,21 +111,25 @@ class motionTracker:
         self.update_particles_histograms()
         self.compute_particle_betas()
         self.resample_particles()
+        self.compute_MMSE_estimate()
 
     def compute_particle_betas(self):
         d_hellinger = self.compute_hellinger_distance(self.particle_histograms,
                                                       self.target_hist['values'])
         # Compute probability density values
-        normal_density_values = norm.pdf(d_hellinger, 0, 1 / self.measurement_noise_sigma)
+        normal_density_values = norm.pdf(
+            d_hellinger, 0, 1 / self.measurement_noise_sigma)
         self.particle_betas = normal_density_values / normal_density_values.sum()
 
     def compute_hellinger_distance(self, h_measured, h_target):
         # Normalize histograms
         h_measured_n = h_measured / h_measured.sum(axis=0)
-        h_target_n = h_target/ h_target.sum(axis=0)
+        h_target_n = h_target / h_target.sum(axis=0)
 
-        h_measured_n = h_measured_n.reshape(-1, 1) if len(h_measured_n.shape) < 2 else h_measured_n
-        h_target_n = h_target_n.reshape(-1, 1) if len(h_target_n.shape) < 2 else h_target_n
+        h_measured_n = h_measured_n.reshape(-1, 1) if len(
+            h_measured_n.shape) < 2 else h_measured_n
+        h_target_n = h_target_n.reshape(-1,
+                                        1) if len(h_target_n.shape) < 2 else h_target_n
         d_hellinger = np.sqrt(1 - np.sqrt(h_measured_n *
                                           h_target_n).sum(axis=0))
         return d_hellinger
@@ -161,7 +166,7 @@ class motionTracker:
 
             if self.show_extended:
                 d_hellinger = self.compute_hellinger_distance(self.particle_histograms[:, i],
-                                                            self.target_hist['values'])
+                                                              self.target_hist['values'])
                 plt.subplot(2, 2, 1)
                 plt.imshow(self.target_ROI['image_gray'], 'gray')
                 plt.title('target')
@@ -170,19 +175,29 @@ class motionTracker:
                 plt.title(str(i + 1) + '. particle')
                 plt.subplot(2, 2, 3)
                 plt.hist(self.target_hist['bins'][:-1], weights=self.target_hist['values'],
-                        bins=self.target_hist['bins'], label='target')
+                         bins=self.target_hist['bins'], label='target')
                 plt.legend()
                 plt.subplot(2, 2, 4)
                 plt.hist(self.target_hist['bins'][:-1], weights=self.particle_histograms[:, i],
-                        bins=self.target_hist['bins'], label=str(i + 1) + '. particle, d_hel={0:0.2f}'.format(d_hellinger[0]))
+                         bins=self.target_hist['bins'], label=str(i + 1) + '. particle, d_hel={0:0.2f}'.format(d_hellinger[0]))
                 plt.legend()
                 plt.show()
                 plt.cla()
 
+    def compute_MMSE_estimate(self):
+        self.mmse_estimate = self.current_state.mean(axis=1).reshape(-1, 1)
+        self.mmse_estimate_box = np.array([self.mmse_estimate[0, 0] -
+                                           self.target_ROI['height'] / 2,
+                                           self.mmse_estimate[1, 0] -
+                                           self.target_ROI['width'] / 2,
+                                           self.mmse_estimate[0, 0] +
+                                           self.target_ROI['height'] / 2,
+                                           self.mmse_estimate[1, 0] +
+                                           self.target_ROI['width'] / 2]).transpose()
+
     def show_particles(self, particles):
         # Radius of circle
         radius = 10
-
         # Red color in BGR
         color = (0, 0, 255)
         center_list = [(int(particles[0, i]), int(particles[1, i]))
@@ -195,13 +210,21 @@ class motionTracker:
                           for i in range(self.particle_boxes.shape[1])]
 
         image_cp = self.image.copy()
-        thickness = 2
+        thickness_particles = 1
+        thickness_mmse = 2
         color_blue = (255, 0, 0)
+        color_green = (0, 255, 0)
         for center_point, start_point, end_point in zip(center_list, start_point_list, end_point_list):
             cv2.circle(image_cp, center_point,
                        radius=radius, color=color)
-            cv2.rectangle(
-                image_cp, start_point, end_point, color=color_blue, thickness=thickness)
+            cv2.rectangle(image_cp, start_point, end_point, color=color_blue,
+                          thickness=thickness_particles)
+        cv2.rectangle(image_cp, (int(self.mmse_estimate_box[0]),
+                                 int(self.mmse_estimate_box[1])),
+                      (int(self.mmse_estimate_box[2]),
+                       int(self.mmse_estimate_box[3])),
+                      color=color_green,
+                      thickness=thickness_mmse)
 
         window_name = 'particles'
 
@@ -233,7 +256,7 @@ class imageSamples:
 def main():
     image_folder = 'images_samples/black_ball'
     images = imageSamples(path_to_images=image_folder)
-    start_image = 10
+    start_image = 4
     ping_pong_tracker = motionTracker(
         image_path=images.image_dt_list[start_image][0])
     for (image_path_m, dt) in images.image_dt_list[start_image + 1:]:
