@@ -14,7 +14,7 @@ class motionTracker:
     def __init__(self, image_path, n_particles=100, sigma_init_pos=40,
                  sigma_init_vel=1, process_noise_pos_sigma=25,
                  process_noise_vel_sigma=20, measurement_noise=20, n_steps=100,
-                 n_states=4, n_bins=50, show_extended=False):
+                 n_states=4, n_bins=50, show_extended=True):
         self.n_particles = n_particles
         self.sigma_init_pos = sigma_init_pos
         self.sigma_init_vel = sigma_init_vel
@@ -254,7 +254,7 @@ class imageSamples:
 
 
 def main():
-    image_folder = 'images_samples/black_ball'
+    image_folder = 'images_samples/pingpong_ball'
     images = imageSamples(path_to_images=image_folder)
     start_image = 4
     ping_pong_tracker = motionTracker(
