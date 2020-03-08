@@ -4,6 +4,11 @@ Tracks ball of ping pong via vision via a particle filter framework more specifi
 The first important task to solve is to retrieve the "raw" pictures from a video e.g. from a .mp4. Additionally, it is extremely beneficial for the filter to know the exact timestamp of those pictures. To accomplish those tasks the functionality of ffmpeg and ffprobe under Linux are leveraged. If you execute the file `frames_from_video.sh` from the command line (make sure file is executable) all images of the video are extracted and stored as .png. On top of that the pts and dts timestamps are stored in the file timestamps.json. `pts` is an acronym for presentation time stamp and `dts` is an acronym for decoder time stamp. Both are extracted but actually only the pts timestamps are relevant later in the filter framework. To extract frames and timestamps of a video, type the following:
 
 `./frames_from_video.sh <video> <folder to store frames and time stamps>`
+
+## Installing python package
+To run the motion tracker, install required python package by typing:
+`pip install -r requirements.txt`
+
 ## Start the tracker
 To start the tracker type:
 
