@@ -1,3 +1,4 @@
+import argparse
 import cv2
 import glob
 import json
@@ -11,7 +12,7 @@ from scipy.stats import norm
 
 class motionTracker:
 
-    def __init__(self, image_path, n_particles=100, sigma_init_pos=40,
+    def __init__(self, image_path, n_particles=20, sigma_init_pos=40,
                  sigma_init_vel=1, process_noise_pos_sigma=25,
                  process_noise_vel_sigma=20, measurement_noise=20, n_steps=100,
                  n_states=4, n_bins=50, show_extended=True):
@@ -254,11 +255,16 @@ class imageSamples:
 
 
 def main():
-    image_folder = 'images_samples/pingpong_ball'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('frames_folder')
+    parser.add_argument('--n_particle', default=20, type=int)
+    args = parser.parse_args()
+    image_folder = args.frames_folder
     images = imageSamples(path_to_images=image_folder)
     start_image = 4
     ping_pong_tracker = motionTracker(
-        image_path=images.image_dt_list[start_image][0])
+        image_path=images.image_dt_list[start_image][0],
+        n_particles=args.n_particle)
     for (image_path_m, dt) in images.image_dt_list[start_image + 1:]:
         ping_pong_tracker.get_new_image(image_path=image_path_m)
         ping_pong_tracker.propagate_particles(dt=dt)
