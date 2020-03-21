@@ -2,6 +2,7 @@ import argparse
 import cv2
 import glob
 import json
+import os
 
 import numpy as np
 
@@ -33,7 +34,6 @@ class motionTracker:
         self.target_ROI = self.get_ROI(self.image)
         self.get_target_hist()
         self.init_particles()
-        self.show_particles(particles=self.X_p[0, :, :])
 
     def get_new_image(self, image_path):
         self.image_path = image_path
@@ -196,7 +196,7 @@ class motionTracker:
                                            self.mmse_estimate[1, 0] +
                                            self.target_ROI['width'] / 2]).transpose()
 
-    def show_particles(self, particles):
+    def generate_processed_frame(self, particles, show=False, save=False, store_name='image.png'):
         # Radius of circle
         radius = 10
         # Red color in BGR
@@ -230,8 +230,11 @@ class motionTracker:
         window_name = 'particles'
 
         # Displaying the image
-        cv2.imshow(window_name, image_cp)
-        cv2.waitKey(0)
+        if show:
+            cv2.imshow(window_name, image_cp)
+            cv2.waitKey(0)
+        if save:
+            cv2.imwrite(store_name, image_cp) 
         cv2.destroyAllWindows()
 
 
@@ -256,21 +259,46 @@ class imageSamples:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('frames_folder')
-    parser.add_argument('--n_particle', default=20, type=int)
+    parser.add_argument('frames_folder',
+                        help='Folder where images are stored.')
+    parser.add_argument('--n_particle', default=20, type=int,
+                        help='Option to define number of particles.')
+    parser.add_argument('--show_particles', '-sh', action='store_true',
+                        help='Option to show each frame with particles')
+    parser.add_argument('--save_frames', '-s', action='store_true',
+                        help='Option to store processed frames.')
+    parser.add_argument('--start_image', default=1, type=int,
+                       help='First image to be processed. \
+                       Input is integer with 1 representing the first image \
+                       in the folder sorted by image name.')
+    parser.add_argument('--end_image', default=-1, type=int,
+                       help='Last image to be processed. \
+                       Input is integer with 1 representing the first image \
+                       in the folder sorted by image name.')
     args = parser.parse_args()
     image_folder = args.frames_folder
     images = imageSamples(path_to_images=image_folder)
-    start_image = 4
+    start_image = args.start_image
+    save_path = image_folder + 'processed/'
+    if args.save_frames and not os.path.isdir(save_path):
+        os.mkdir(save_path)
     ping_pong_tracker = motionTracker(
         image_path=images.image_dt_list[start_image][0],
         n_particles=args.n_particle)
-    for (image_path_m, dt) in images.image_dt_list[start_image + 1:]:
+    counter = 0
+    if args.end_image < 0:
+        considered_list = images.image_dt_list[start_image + 1:]
+    else:
+        considered_list = images.image_dt_list[start_image + 1:args.end_image + 1]
+    for (image_path_m, dt) in considered_list:
+        counter += 1
+        print('Processing image {}'.format(image_path_m))
         ping_pong_tracker.get_new_image(image_path=image_path_m)
         ping_pong_tracker.propagate_particles(dt=dt)
         ping_pong_tracker.update_particles()
-        ping_pong_tracker.show_particles(
-            particles=ping_pong_tracker.current_state)
+        ping_pong_tracker.generate_processed_frame(
+            particles=ping_pong_tracker.current_state, show=args.show_particles,
+            save=args.save_frames, store_name=save_path + str(counter) + '.png')
 
 
 if __name__ == '__main__':
