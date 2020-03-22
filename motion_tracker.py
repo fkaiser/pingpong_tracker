@@ -3,6 +3,7 @@ import cv2
 import glob
 import json
 import os
+import re
 
 import numpy as np
 
@@ -285,20 +286,25 @@ def main():
     ping_pong_tracker = motionTracker(
         image_path=images.image_dt_list[start_image][0],
         n_particles=args.n_particle)
-    counter = 0
     if args.end_image < 0:
         considered_list = images.image_dt_list[start_image + 1:]
     else:
         considered_list = images.image_dt_list[start_image + 1:args.end_image + 1]
     for (image_path_m, dt) in considered_list:
-        counter += 1
+        match_obj = re.search('.*(image[0-9]*).png', image_path_m)
+        if match_obj:
+            store_name = save_path + match_obj.group(1) + '.png'
+        else:
+            print('Error: image to be processed {} in wrong format'.format(image_path_m))
+            return
+        
         print('Processing image {}'.format(image_path_m))
         ping_pong_tracker.get_new_image(image_path=image_path_m)
         ping_pong_tracker.propagate_particles(dt=dt)
         ping_pong_tracker.update_particles()
         ping_pong_tracker.generate_processed_frame(
             particles=ping_pong_tracker.current_state, show=args.show_particles,
-            save=args.save_frames, store_name=save_path + str(counter) + '.png')
+            save=args.save_frames, store_name=store_name)
 
 
 if __name__ == '__main__':
