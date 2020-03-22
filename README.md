@@ -45,8 +45,18 @@ This also means that if we re-sample our prior estimated particles according to 
 
 <a href="https://www.codecogs.com/eqnedit.php?latex=q(d_{hellinger})&space;=&space;\frac{1}{\sqrt{2\pi\sigma^2}}exp(-\frac{d_{hellinger}^2}{2\sigma^2})" target="_blank"><img src="https://latex.codecogs.com/gif.latex?q(d_{hellinger})&space;=&space;\frac{1}{\sqrt{2\pi\sigma^2}}exp(-\frac{d_{hellinger}^2}{2\sigma^2})" title="q(d_{hellinger}) = \frac{1}{\sqrt{2\pi\sigma^2}}exp(-\frac{d_{hellinger}^2}{2\sigma^2})" /></a>
 
+### Estimation of the ball
+The effective position of the rectangel containing the ball is the minimum mean square error (MMSE) estimator that this estimate minimize the mean squared error to the true center position of the rectangle containing the ball. 
+<a href="https://www.codecogs.com/eqnedit.php?latex=\vec{x}_{MMSE}&space;=&space;\frac{1}{n}\sum_{i=1}^{n}&space;\vec{x}_i" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\vec{x}_{MMSE}&space;=&space;\frac{1}{n}\sum_{i=1}^{n}&space;\vec{x}_i" title="\vec{x}_{MMSE} = \frac{1}{n}\sum_{i=1}^{n} \vec{x}_i" /></a>
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=\vec{x}_i&space;:=&space;\text{center&space;position&space;of&space;retangle&space;i}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\vec{x}_i&space;:=&space;\text{center&space;position&space;of&space;retangle&space;i}" title="\vec{x}_i := \text{center position of retangle i}" /></a>
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=n:=&space;\text{Total&space;number&space;of&space;rectangles&space;in&space;filter}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?n:=&space;\text{Total&space;number&space;of&space;rectangles&space;in&space;filter}" title="n:= \text{Total number of rectangles in filter}" /></a>
+
 ### Result of tracker
-An example of the tracker is given below:
+As an example of the tracker a black ball is used as a pendulum. The tracker tries to track the position of the ball. In the image below you see all rectangles of the filter with a blue border respectively the MMSE estimate has a green border.
+![pendulum](images_README/pendulum.png)
+The correspoding video can be found in:
 ![pendulum_ball](images_README/pendulum_ball.mp4)
 
 
