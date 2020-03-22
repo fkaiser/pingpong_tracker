@@ -54,12 +54,19 @@ The effective position of the rectangel containing the ball is the minimum mean 
 <a href="https://www.codecogs.com/eqnedit.php?latex=n:=&space;\text{Total&space;number&space;of&space;rectangles&space;in&space;filter}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?n:=&space;\text{Total&space;number&space;of&space;rectangles&space;in&space;filter}" title="n:= \text{Total number of rectangles in filter}" /></a>
 
 ### Result of tracker
-As an example of the tracker a black ball is used as a pendulum. The tracker tries to track the position of the ball. In the image below you see all rectangles of the filter with a blue border respectively the MMSE estimate has a green border. The red circle(s) represent the centers of the rectangles after resampling. In the image below there are only three center(s). This is done due to resampling to account for the higher probability that the ball is in this area. In order to avoid a situation where the filter has only one particle at every propagation step there is some noise applied. Hence, filter is more robust against fast motions.
+As an example of the tracker a black ball is used as a pendulum. The tracker tries to track the position of the ball. In the image below you see all rectangles of the filter with a blue border respectively the MMSE estimate has a green border. The red circle(s) represent the centers of the rectangles after resampling. In the image below there are only six center(s). This is done due to resampling to account for the higher probability that the ball is in this area. In order to avoid a situation where the filter has only one particle at every propagation step there is some noise applied. Hence, filter is more robust against fast motions.
 
 ![pendulum](images_README/pend_tracker.png)
 
 The correspoding video can be found in:
 
 ![pendulum_ball](images_README/pendulum_ball.mp4)
+
+### Creating video from stored processed frames
+You can select the option to store the processed frames similar to the image shown in the last section. If you want to create a video based on those frames, you can use the script video_from_frame.sh by typing:
+
+`./video_from_frame.sh <video> <folder to processed frames> <desired frame rate e.g. 30>`
+
+The video is then stored in the processed folder with the name output.mp4.
 
 
