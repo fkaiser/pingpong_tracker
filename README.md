@@ -45,4 +45,8 @@ This also means that if we re-sample our prior estimated particles according to 
 
 <a href="https://www.codecogs.com/eqnedit.php?latex=q(d_{hellinger})&space;=&space;\frac{1}{\sqrt{2\pi\sigma^2}}exp(-\frac{d_{hellinger}^2}{2\sigma^2})" target="_blank"><img src="https://latex.codecogs.com/gif.latex?q(d_{hellinger})&space;=&space;\frac{1}{\sqrt{2\pi\sigma^2}}exp(-\frac{d_{hellinger}^2}{2\sigma^2})" title="q(d_{hellinger}) = \frac{1}{\sqrt{2\pi\sigma^2}}exp(-\frac{d_{hellinger}^2}{2\sigma^2})" /></a>
 
+### Result of tracker
+An example of the tracker is given below:
+![pendulum_ball](images_README/pendulum_ball.mp4)
+
 
