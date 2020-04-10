@@ -232,8 +232,10 @@ class motionTracker:
 
         # Displaying the image
         if show:
-            cv2.imshow(window_name, image_cp)
-            cv2.waitKey(0)
+            while True:
+                cv2.imshow(window_name, image_cp)
+                if cv2.waitKey(1) & 0xFF == ord('n'):
+                    break
         if save:
             cv2.imwrite(store_name, image_cp) 
         cv2.destroyAllWindows()
