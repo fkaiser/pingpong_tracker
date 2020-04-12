@@ -1,5 +1,6 @@
 # PingPong_tracker
-Tracks ball of ping pong via vision via a particle filter framework more specifically via the [**Condensation algorithm**](https://en.wikipedia.org/wiki/Condensation_algorithm).
+The goal of the project to track a ping pong ball. The long term goal is to estimate the spin of the ball. To achieve those goals first and foremost one needs to be able to gather footage at high enough frequency and implement a procedure to track the ball. At the moment the footage is collected with a raspberry pi camera at a framerat of 80-90 Hz. For the tracking of the ball two different approches are given. On the one hand the ball is tracked via a particle filter framework more specifically via the [**Condensation algorithm**](https://en.wikipedia.org/wiki/Condensation_algorithm). On the other hand as a alternative the ball is tracked directly with the ciruclar hough transform. 
+
 ## Frames from video
 The first important task to solve is to retrieve the "raw" pictures from a video e.g. from a .mp4. Additionally, it is extremely beneficial for the filter to know the exact timestamp of those pictures. To accomplish those tasks the functionality of ffmpeg and ffprobe under Linux are leveraged. If you execute the file `frames_from_video.sh` from the command line (make sure file is executable) all images of the video are extracted and stored as .png. On top of that the pts and dts timestamps are stored in the file timestamps.json. `pts` is an acronym for presentation time stamp and `dts` is an acronym for decoder time stamp. Both are extracted but actually only the pts timestamps are relevant later in the filter framework. To extract frames and timestamps of a video, type the following:
 
@@ -9,10 +10,10 @@ The first important task to solve is to retrieve the "raw" pictures from a video
 To run the motion tracker, install required python package by typing:
 `pip install -r requirements.txt`
 
-## Start the tracker
+## Track the ball via particle filter
 To start the tracker type:
 
-`python motion_tracker.py --n_particle <desired number of particles> <path to folder with frames>`
+`python motion_tracker.py --n_particle <desired number of particles> <path to folder with frames> --method 'particle'`
 
 This will open a screen where you can select the region of interest. After pressing enter, the tracker will try to estimate the position of the selected object in the next frame. The region is then shown as green rectangle.
 
@@ -62,7 +63,24 @@ The correspoding video can be found in:
 
 ![pendulum_ball](images_README/pendulum_ball.mp4)
 
-### Creating video from stored processed frames
+## Track the ball via circular hough transform
+The (https://en.wikipedia.org/wiki/Circle_Hough_Transform)[https://en.wikipedia.org/wiki/Circle_Hough_Transform] tries to extract circules in imagery by process the image in a way that allows to associates circles in a image to an accumulator space that represents the 3D parameter space for circles. By doing so one can than effevictely where the images are localized. Generally the steps of the circular hough transform involve the following:
+* Reduce noise on image e.g. with Gaussian or median blurring
+* Convert to gray scale image
+* Apply the Canny-edge detector
+* Vote the possible circles in the accumlator space
+* Local maxima in the accumlator space represent circles in the image
+
+OpenCV offers a direct implementation of the circular hough transform described in more detail [here](https://docs.opencv.org/2.4/doc/tutorials/imgproc/imgtrans/hough_circle/hough_circle.html).
+
+To start the tracker type:
+
+`python motion_tracker.py  <path to folder with frames> --method 'hough'`
+
+As an exmaple of the circular hough tracker in the image below the green circle respectivly the red dot show the estimated circle respectively the mid point of the circle.
+![hough](images_README/hough_tracker.png)
+
+## Creating video from stored processed frames
 You can select the option to store the processed frames similar to the image shown in the last section. If you want to create a video based on those frames, you can use the script video_from_frame.sh by typing:
 
 `./video_from_frame.sh <video> <desired frame rate e.g. 30>`

@@ -4,6 +4,7 @@ import glob
 import json
 import os
 import re
+import time
 
 import numpy as np
 
@@ -17,30 +18,31 @@ class motionTracker:
     def __init__(self, image_path, n_particles=20, sigma_init_pos=40,
                  sigma_init_vel=1, process_noise_pos_sigma=25,
                  process_noise_vel_sigma=20, measurement_noise=20, n_steps=100,
-                 n_states=4, n_bins=50, show_extended=True):
-        self.n_particles = n_particles
-        self.sigma_init_pos = sigma_init_pos
-        self.sigma_init_vel = sigma_init_vel
-        self.process_noise_pos_sigma = process_noise_pos_sigma
-        self.process_noise_vel_sigma = process_noise_vel_sigma
-        self.measurement_noise_sigma = measurement_noise
-        self.n_steps = n_steps
-        self.n_states = n_states
-        self.n_bins = n_bins
-        self.show_extended = show_extended
-        self.compute_init_variance()
-        self.compute_process_noise_variance()
+                 n_states=4, n_bins=50, show_extended=False, particle_filter=True):
         self.image_path = image_path
         self.image = self.load_image(self.image_path)
-        self.target_ROI = self.get_ROI(self.image)
-        self.get_target_hist()
-        self.init_particles()
+        
+        if particle_filter:
+            self.n_particles = n_particles
+            self.sigma_init_pos = sigma_init_pos
+            self.sigma_init_vel = sigma_init_vel
+            self.process_noise_pos_sigma = process_noise_pos_sigma
+            self.process_noise_vel_sigma = process_noise_vel_sigma
+            self.measurement_noise_sigma = measurement_noise
+            self.n_steps = n_steps
+            self.n_states = n_states
+            self.n_bins = n_bins
+            self.show_extended = show_extended
+            self.compute_init_variance()
+            self.compute_process_noise_variance()
+            self.target_ROI = self.get_ROI(self.image)
+            self.get_target_hist()
+            self.init_particles()
     
     def track_ball_hough(self, show=False, save=False, store_name='image.png'):
-        img = cv2.medianBlur(self.image,5)
-        cimg = cv2.cvtColor(img, cv.COLOR_GRAY2BGR)
-        circles = cv2.HoughCircles(img,cv.HOUGH_GRADIENT,1,20,
-                                    param1=50,param2=30,minRadius=10,maxRadius=30)
+        img = cv2.medianBlur(self.convert_to_grayscale(self.image), 5)
+        cimg = self.image
+        circles = cv2.HoughCircles(img ,cv2.HOUGH_GRADIENT,1,20,param1=50,param2=30,minRadius=10,maxRadius=30)
         for i in circles[0,:]:
             # draw the outer circle
             cv2.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2)
@@ -119,7 +121,6 @@ class motionTracker:
             (self.target_hist['values'].shape[0], self.n_particles))
         self.particle_betas = np.ones(
             (1, self.n_particles)) * 1 / self.n_particles
-        self.mmse_estimate = np.zeros((4,1))
         self.compute_MMSE_estimate()
 
     def propagate_particles(self, dt):
@@ -208,10 +209,7 @@ class motionTracker:
                 plt.cla()
 
     def compute_MMSE_estimate(self):
-        mmse_estimate_new = self.current_state.mean(axis=1).reshape(-1, 1)
-        self.mmse_estimate[2:,0] = mmse_estimate_new - self.mmse_estimate[2:]
-        print('Speed {}'.format(self.mmse_estimate[2:]))
-        self.mmse_estimate[0:2,0] = mmse_estimate_new
+        self.mmse_estimate = self.current_state.mean(axis=1).reshape(-1, 1)
         self.mmse_estimate_box = np.array([self.mmse_estimate[0, 0] -
                                            self.target_ROI['height'] / 2,
                                            self.mmse_estimate[1, 0] -
@@ -309,15 +307,18 @@ def main():
     images = imageSamples(path_to_images=image_folder)
     start_image = args.start_image
     save_path = image_folder + 'processed/'
+    particle_filter = True if args.method == 'particle' else False
     if args.save_frames and not os.path.isdir(save_path):
         os.mkdir(save_path)
     ping_pong_tracker = motionTracker(
         image_path=images.image_dt_list[start_image][0],
-        n_particles=args.n_particle)
+        n_particles=args.n_particle, particle_filter=particle_filter)
     if args.end_image < 0:
         considered_list = images.image_dt_list[start_image + 1:]
     else:
         considered_list = images.image_dt_list[start_image + 1:args.end_image + 1]
+    
+    time_list = []
     for (image_path_m, dt) in considered_list:
         match_obj = re.search('.*(image[0-9]*).png', image_path_m)
         if match_obj:
@@ -328,6 +329,7 @@ def main():
         
         print('Processing image {}'.format(image_path_m))
         ping_pong_tracker.get_new_image(image_path=image_path_m)
+        time_start = time.time()
         if args.method == 'particle':
             ping_pong_tracker.propagate_particles(dt=dt)
             ping_pong_tracker.update_particles()
@@ -337,6 +339,11 @@ def main():
         elif args.method == 'hough':
             ping_pong_tracker.track_ball_hough(show=args.show_particles,
                 save=args.save_frames, store_name=store_name)
+        time_dt = time.time() - time_start
+        print('time_dt: {}'.format(time_dt))
+        time_list.append(time_dt)
+
+    print('Mean computation time per frame: {}s'.format(np.mean(time_list)))
 
 
 if __name__ == '__main__':
