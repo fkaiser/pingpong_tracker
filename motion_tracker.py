@@ -43,11 +43,12 @@ class motionTracker:
         img = cv2.medianBlur(self.convert_to_grayscale(self.image), 5)
         cimg = self.image
         circles = cv2.HoughCircles(img ,cv2.HOUGH_GRADIENT,1,20,param1=50,param2=30,minRadius=10,maxRadius=30)
-        for i in circles[0,:]:
-            # draw the outer circle
-            cv2.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2)
-            # draw the center of the circle
-            cv2.circle(cimg,(i[0],i[1]),2,(0,0,255),3)
+        if not circles is None:
+            for i in circles[0,:]:
+                # draw the outer circle
+                cv2.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2)
+                # draw the center of the circle
+                cv2.circle(cimg,(i[0],i[1]),2,(0,0,255),3)
         
         if show:
             while True:

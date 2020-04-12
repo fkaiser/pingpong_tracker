@@ -85,7 +85,7 @@ As an exmaple of the circular hough tracker in the image below the green circle 
 ## Creating video from stored processed frames
 You can select the option to store the processed frames similar to the image shown in the last section. If you want to create a video based on those frames, you can use the script video_from_frame.sh by typing:
 
-`./video_from_frame.sh <video> <desired frame rate e.g. 30>`
+`./video_from_frame.sh <image folder> <desired frame rate e.g. 30>`
 
 The video is then stored in the processed folder with the name output.mp4.
 
