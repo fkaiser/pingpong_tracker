@@ -65,7 +65,7 @@ The correspoding video can be found in:
 ![pendulum_ball](images_README/pendulum_ball.mp4)
 
 ## Track the ball via circular hough transform
-The [circular hough transform](https://en.wikipedia.org/wiki/Circle_Hough_Transform) tries to extract circules in imagery by process the image in a way that allows to associates circles in a image to an accumulator space that represents the 3D parameter space for circles. By doing so one can than effevictely where the images are localized. Generally the steps of the circular hough transform involve the following:
+The [circular hough transform](https://en.wikipedia.org/wiki/Circle_Hough_Transform) tries to extract circles in imagery by process the image in a way that allows to associates circles in a image to an accumulator space that represents the 3D parameter space for circles. By doing so one can than effectively where the images are localized. Generally the steps of the circular hough transform involve the following:
 * Reduce noise on image e.g. with Gaussian or median blurring
 * Convert to gray scale image
 * Apply the Canny-edge detector
@@ -78,9 +78,13 @@ To start the tracker type:
 
 `python motion_tracker.py  <path to folder with frames> --method 'hough'`
 
-As an exmaple of the circular hough tracker in the image below the green circle respectivly the red dot show the estimated circle respectively the mid point of the circle.
+As an example of the circular hough tracker in the image below the green circle respectively the red dot show the estimated circle respectively the mid point of the circle.
 
 ![hough](images_README/hough_tracker.png)
+
+An example video of the tracker is given in:
+
+![hough_tracker](images_README/hough_tracker.mp4)
 
 ## Creating video from stored processed frames
 You can select the option to store the processed frames similar to the image shown in the last section. If you want to create a video based on those frames, you can use the script video_from_frame.sh by typing:
