@@ -48,6 +48,7 @@ This also means that if we re-sample our prior estimated particles according to 
 
 ### Estimation of the ball
 The effective position of the rectangel containing the ball is the minimum mean square error (MMSE) estimator that this estimate minimize the mean squared error to the true center position of the rectangle containing the ball. 
+
 <a href="https://www.codecogs.com/eqnedit.php?latex=\vec{x}_{MMSE}&space;=&space;\frac{1}{n}\sum_{i=1}^{n}&space;\vec{x}_i" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\vec{x}_{MMSE}&space;=&space;\frac{1}{n}\sum_{i=1}^{n}&space;\vec{x}_i" title="\vec{x}_{MMSE} = \frac{1}{n}\sum_{i=1}^{n} \vec{x}_i" /></a>
 
 <a href="https://www.codecogs.com/eqnedit.php?latex=\vec{x}_i&space;:=&space;\text{center&space;position&space;of&space;retangle&space;i}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\vec{x}_i&space;:=&space;\text{center&space;position&space;of&space;retangle&space;i}" title="\vec{x}_i := \text{center position of retangle i}" /></a>
@@ -64,7 +65,7 @@ The correspoding video can be found in:
 ![pendulum_ball](images_README/pendulum_ball.mp4)
 
 ## Track the ball via circular hough transform
-The (https://en.wikipedia.org/wiki/Circle_Hough_Transform)[https://en.wikipedia.org/wiki/Circle_Hough_Transform] tries to extract circules in imagery by process the image in a way that allows to associates circles in a image to an accumulator space that represents the 3D parameter space for circles. By doing so one can than effevictely where the images are localized. Generally the steps of the circular hough transform involve the following:
+The [circular hough transform](https://en.wikipedia.org/wiki/Circle_Hough_Transform) tries to extract circules in imagery by process the image in a way that allows to associates circles in a image to an accumulator space that represents the 3D parameter space for circles. By doing so one can than effevictely where the images are localized. Generally the steps of the circular hough transform involve the following:
 * Reduce noise on image e.g. with Gaussian or median blurring
 * Convert to gray scale image
 * Apply the Canny-edge detector
@@ -78,6 +79,7 @@ To start the tracker type:
 `python motion_tracker.py  <path to folder with frames> --method 'hough'`
 
 As an exmaple of the circular hough tracker in the image below the green circle respectivly the red dot show the estimated circle respectively the mid point of the circle.
+
 ![hough](images_README/hough_tracker.png)
 
 ## Creating video from stored processed frames
