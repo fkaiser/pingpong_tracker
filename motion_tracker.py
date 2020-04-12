@@ -35,6 +35,26 @@ class motionTracker:
         self.target_ROI = self.get_ROI(self.image)
         self.get_target_hist()
         self.init_particles()
+    
+    def track_ball_hough(self, show=False, save=False, store_name='image.png'):
+        img = cv2.medianBlur(self.image,5)
+        cimg = cv2.cvtColor(img, cv.COLOR_GRAY2BGR)
+        circles = cv2.HoughCircles(img,cv.HOUGH_GRADIENT,1,20,
+                                    param1=50,param2=30,minRadius=10,maxRadius=30)
+        for i in circles[0,:]:
+            # draw the outer circle
+            cv2.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2)
+            # draw the center of the circle
+            cv2.circle(cimg,(i[0],i[1]),2,(0,0,255),3)
+        
+        if show:
+            while True:
+                cv2.imshow('detected circles',cimg)
+                if cv2.waitKey(1) % 0xff == ord('n'):
+                    break
+        if save:
+            cv2.imwrite(store_name, cimg) 
+        cv2.destroyAllWindows()
 
     def get_new_image(self, image_path):
         self.image_path = image_path
@@ -99,6 +119,7 @@ class motionTracker:
             (self.target_hist['values'].shape[0], self.n_particles))
         self.particle_betas = np.ones(
             (1, self.n_particles)) * 1 / self.n_particles
+        self.mmse_estimate = np.zeros((4,1))
         self.compute_MMSE_estimate()
 
     def propagate_particles(self, dt):
@@ -187,7 +208,10 @@ class motionTracker:
                 plt.cla()
 
     def compute_MMSE_estimate(self):
-        self.mmse_estimate = self.current_state.mean(axis=1).reshape(-1, 1)
+        mmse_estimate_new = self.current_state.mean(axis=1).reshape(-1, 1)
+        self.mmse_estimate[2:,0] = mmse_estimate_new - self.mmse_estimate[2:]
+        print('Speed {}'.format(self.mmse_estimate[2:]))
+        self.mmse_estimate[0:2,0] = mmse_estimate_new
         self.mmse_estimate_box = np.array([self.mmse_estimate[0, 0] -
                                            self.target_ROI['height'] / 2,
                                            self.mmse_estimate[1, 0] -
@@ -278,6 +302,8 @@ def main():
                        help='Last image to be processed. \
                        Input is integer with 1 representing the first image \
                        in the folder sorted by image name.')
+    parser.add_argument('--method' ,default='particle', type=str, help='Method of how trackre should work.\
+                       Options are: "particle", "hough"')
     args = parser.parse_args()
     image_folder = args.frames_folder
     images = imageSamples(path_to_images=image_folder)
@@ -302,11 +328,15 @@ def main():
         
         print('Processing image {}'.format(image_path_m))
         ping_pong_tracker.get_new_image(image_path=image_path_m)
-        ping_pong_tracker.propagate_particles(dt=dt)
-        ping_pong_tracker.update_particles()
-        ping_pong_tracker.generate_processed_frame(
-            particles=ping_pong_tracker.current_state, show=args.show_particles,
-            save=args.save_frames, store_name=store_name)
+        if args.method == 'particle':
+            ping_pong_tracker.propagate_particles(dt=dt)
+            ping_pong_tracker.update_particles()
+            ping_pong_tracker.generate_processed_frame(
+                particles=ping_pong_tracker.current_state, show=args.show_particles,
+                save=args.save_frames, store_name=store_name)
+        elif args.method == 'hough':
+            ping_pong_tracker.track_ball_hough(show=args.show_particles,
+                save=args.save_frames, store_name=store_name)
 
 
 if __name__ == '__main__':
