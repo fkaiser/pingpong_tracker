@@ -65,12 +65,12 @@ The correspoding video can be found in:
 ![pendulum_ball](images_README/pendulum_ball.mp4)
 
 ## Track the ball via circular hough transform
-The [circular hough transform](https://en.wikipedia.org/wiki/Circle_Hough_Transform) tries to extract circles in imagery by process the image in a way that allows to associates circles in a image to an accumulator space that represents the 3D parameter space for circles. By doing so one can than effectively where the images are localized. Generally the steps of the circular hough transform involve the following:
+The [circular hough transform](https://en.wikipedia.org/wiki/Circle_Hough_Transform) tries to extract circles in imagery by process the image in a way that allows to associates circles in a image to an accumulator space that represents the 3D parameter space for circles. By doing so one can than effectively where tell the circles are localized. Generally the steps of the circular hough transform involve the following:
 * Reduce noise on image e.g. with Gaussian or median blurring
 * Convert to gray scale image
 * Apply the Canny-edge detector
-* Vote the possible circles in the accumlator space
-* Local maxima in the accumlator space represent circles in the image
+* Vote the possible circles in the accumulator space
+* Local maxima in the accumulator space represent circles in the image
 
 OpenCV offers a direct implementation of the circular hough transform described in more detail [here](https://docs.opencv.org/2.4/doc/tutorials/imgproc/imgtrans/hough_circle/hough_circle.html).
 
@@ -92,18 +92,3 @@ You can select the option to store the processed frames similar to the image sho
 `./video_from_frame.sh <image folder> <desired frame rate e.g. 30>`
 
 The video is then stored in the processed folder with the name output.mp4.
-
-
-## Run node
-- Main computer export ROS_MASTER_URI=http://192.168.1.13:11311
-- rpi computer export ROS_MASTER_URI=http://192.168.1.13:11311
-- rpi: export ROS_HOSTNAME=192.168.1.14
-- rpi: . ros_catkin_ws/devel/setup.bash
-- Main: roscore
-- rpi: roslaunch raspicam_node camerav1_1280x720.launch
-- Main: second terminal: export ROS_MASTER_URI=http://192.168.1.13:11311
-- rqt_image_view
-- Next step: Use opencv c++ libarary to make circular hough transform in C level offline on computer work
-https://docs.opencv.org/4.0.0/d4/d70/tutorial_hough_circle.html
-g++ test.cpp -L/home/fabian/opencv_build/opencv/build/lib -lopencv_highgui -lopencv_imgcodecs -lopencv_imgproc -lopencv_core -o Test
-g++ track_ball.cpp -L/home/fabian/opencv_build/opencv/build/lib -lopencv_highgui -lopencv_imgcodecs -lopencv_imgproc -lopencv_core -lboost_filesystem -lboost_system -o online_tracker 
