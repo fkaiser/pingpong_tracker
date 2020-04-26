@@ -25,10 +25,12 @@ void get_all(const fs::path& root, const string& ext, vector<fs::path>& ret)
     while(it != endit)
     {
         if(fs::is_regular_file(*it) && it->path().extension() == ext) ret.push_back(it->path());
-        std::cout << it->path() << std::endl;
+        //std::cout << it->path() << std::endl;
         ++it;
 
     }
+
+    std::sort(ret.begin(), ret.end());
 
 }
 
