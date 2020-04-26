@@ -94,3 +94,16 @@ You can select the option to store the processed frames similar to the image sho
 The video is then stored in the processed folder with the name output.mp4.
 
 
+## Run node
+- Main computer export ROS_MASTER_URI=http://192.168.1.13:11311
+- rpi computer export ROS_MASTER_URI=http://192.168.1.13:11311
+- rpi: export ROS_HOSTNAME=192.168.1.14
+- rpi: . ros_catkin_ws/devel/setup.bash
+- Main: roscore
+- rpi: roslaunch raspicam_node camerav1_1280x720.launch
+- Main: second terminal: export ROS_MASTER_URI=http://192.168.1.13:11311
+- rqt_image_view
+- Next step: Use opencv c++ libarary to make circular hough transform in C level offline on computer work
+https://docs.opencv.org/4.0.0/d4/d70/tutorial_hough_circle.html
+g++ test.cpp -L/home/fabian/opencv_build/opencv/build/lib -lopencv_highgui -lopencv_imgcodecs -lopencv_imgproc -lopencv_core -o Test
+g++ track_ball.cpp -L/home/fabian/opencv_build/opencv/build/lib -lopencv_highgui -lopencv_imgcodecs -lopencv_imgproc -lopencv_core -lboost_filesystem -lboost_system -o online_tracker 
