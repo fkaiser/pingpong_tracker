@@ -34,14 +34,14 @@ void get_all(const fs::path& root, const string& ext, vector<fs::path>& ret)
 
 }
 
-int circular_hough_extraction(const string filename)
+int circular_hough_extraction(const string& path_name, const string& file_name, const std::string& dir_name_save,
+                              const bool store_image, const bool save_images)
 {
     // Loads an image
-    Mat src = imread(filename, IMREAD_COLOR );
+    Mat src = imread(path_name, IMREAD_COLOR );
     // Check if image is loaded fine
     if(src.empty()){
         printf(" Error opening image\n");
-       // printf(" Program Arguments: [image_name -- default %s] \n", filename);
         return -1;
     }
     Mat gray;
@@ -58,19 +58,49 @@ int circular_hough_extraction(const string filename)
         Vec3i c = circles[i];
         Point center = Point(c[0], c[1]);
         // circle center
-        circle( src, center, 1, Scalar(0,100,100), 3, LINE_AA);
+        circle(src, center, 1, Scalar(0,100,100), 3, LINE_AA);
         // circle outline
         int radius = c[2];
-        circle( src, center, radius, Scalar(255,0,255), 3, LINE_AA);
+        circle(src, center, radius, Scalar(255,0,255), 3, LINE_AA);
     }
-    imshow("detected circles", src);
+    if (store_image) {
+        imwrite(dir_name_save + "/" + file_name, src);
+    }
+    if (save_images) {
+        imshow("detected circles", src);
+    }
     waitKey();
     return 0;
 
 }
 
+
+static void show_usage(std::string name)
+{
+    std::cerr << "Usage: " << name <<"\n"
+              << "Options:\n"
+              << "\t-h,--help\t\tShow this help message\n"
+              << "\t--save_images: \tSaves processed images\n"
+              << "\t--show_images: \t Shows processed images"
+              << std::endl;
+}
+
+
 int main(int argc, char** argv)
 {
+    bool save_images = false;
+    bool show_images = false;
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if ((arg == "-h") || (arg == "--help")) {
+            show_usage(argv[0]);
+            return 0;
+        } else if (arg == "--save_images") {
+            save_images = true;
+        } else if (arg == "--show_images") {
+            show_images = true;
+        }
+    }
     const char* home_dir = std::getenv("HOME");
     if(home_dir) {
         std::cout << "Your HOME dir is: " << home_dir << '\n';
@@ -80,13 +110,14 @@ int main(int argc, char** argv)
     }
     const string file_ending = ".png";
     const std::string dir_name_rel = "/Documents/images_ping_pong_tracker";
-    std::string dir_name = std::string(home_dir) + dir_name_rel;
+    const std::string dir_name = std::string(home_dir) + dir_name_rel;
+    const std::string dir_name_save = dir_name + "/saved/";
     const char* filename = argc >=2 ? argv[1] : "testimage.png";
     vector<fs::path> image_names;
     get_all(dir_name, file_ending, image_names);
     for (auto it = std::begin(image_names); it != std::end(image_names); ++it) {
         std::cout << it->string() << std::endl;
-        circular_hough_extraction(it->string());
+        circular_hough_extraction(it->string(), it->filename().string(), dir_name_save, save_images, show_images);
     }
     
 
