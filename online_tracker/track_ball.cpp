@@ -2,6 +2,9 @@
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
 #include <iostream>
+#include <ctime>
+#include <ratio>
+#include <chrono>
 
 #define BOOST_FILESYSTEM_VERSION 3
 #define BOOST_FILESYSTEM_NO_DEPRECATED 
@@ -38,6 +41,7 @@ int circular_hough_extraction(const string& path_name, const string& file_name, 
                               const bool store_image, const bool save_images)
 {
     // Loads an image
+    std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
     Mat src = imread(path_name, IMREAD_COLOR );
     // Check if image is loaded fine
     if(src.empty()){
@@ -63,6 +67,7 @@ int circular_hough_extraction(const string& path_name, const string& file_name, 
         int radius = c[2];
         circle(src, center, radius, Scalar(255,0,255), 3, LINE_AA);
     }
+
     if (store_image) {
         imwrite(dir_name_save + "/" + file_name, src);
     }
@@ -70,6 +75,11 @@ int circular_hough_extraction(const string& path_name, const string& file_name, 
         imshow("detected circles", src);
         waitKey();
     }
+    std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
+
+    std::cout << "Image load, circular extraction and store took:  " << time_span.count() << " seconds.";
+    std::cout << std::endl;
     return 0;
 
 }
