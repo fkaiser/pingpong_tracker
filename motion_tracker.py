@@ -301,8 +301,8 @@ def main():
                        help='Last image to be processed. \
                        Input is integer with 1 representing the first image \
                        in the folder sorted by image name.')
-    parser.add_argument('--method' ,default='particle', type=str, help='Method of how trackre should work.\
-                       Options are: "particle", "hough"')
+    parser.add_argument('--method', default='particle', type=str, help='Method of how tracker should work.\
+                       Options are: particle, hough')
     args = parser.parse_args()
     image_folder = args.frames_folder
     images = imageSamples(path_to_images=image_folder)

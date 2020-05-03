@@ -13,7 +13,7 @@ To run the motion tracker, install required python package by typing:
 ## Track the ball via particle filter
 To start the tracker type:
 
-`python motion_tracker.py --n_particle <desired number of particles> <path to folder with frames> --method 'particle'`
+`python motion_tracker.py --n_particle <desired number of particles> <path to folder with frames> --method particle`
 
 This will open a screen where you can select the region of interest. After pressing enter, the tracker will try to estimate the position of the selected object in the next frame. The region is then shown as green rectangle.
 
@@ -76,7 +76,7 @@ OpenCV offers a direct implementation of the circular hough transform described 
 
 To start the tracker type:
 
-`python motion_tracker.py  <path to folder with frames> --method 'hough'`
+`python motion_tracker.py  <path to folder with frames> --method hough`
 
 As an example of the circular hough tracker in the image below the green circle respectively the red dot show the estimated circle respectively the mid point of the circle.
 
