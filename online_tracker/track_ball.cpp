@@ -68,8 +68,8 @@ int circular_hough_extraction(const string& path_name, const string& file_name, 
     }
     if (save_images) {
         imshow("detected circles", src);
+        waitKey();
     }
-    waitKey();
     return 0;
 
 }
@@ -115,9 +115,14 @@ int main(int argc, char** argv)
     const char* filename = argc >=2 ? argv[1] : "testimage.png";
     vector<fs::path> image_names;
     get_all(dir_name, file_ending, image_names);
+    int counter = 0;
     for (auto it = std::begin(image_names); it != std::end(image_names); ++it) {
         std::cout << it->string() << std::endl;
         circular_hough_extraction(it->string(), it->filename().string(), dir_name_save, save_images, show_images);
+        if (counter >= 20) {
+            break;
+        }
+        counter++;
     }
     
 
