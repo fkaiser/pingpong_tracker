@@ -146,6 +146,27 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 
+set(OPENCV_LIB "${HOME}/opencv_build/opencv/build/lib")
+# Define executable
+add_executable("${PROJECT_NAME}"  online_tracker/track_ball.cpp)
+
+find_library(OPENCV_LIB opencv_lib HINTS "${HOME}/opencv_build/opencv/build/lib")
+target_link_libraries("${PROJECT_NAME}"
+                     opencv_highgui
+                     opencv_imgcodecs
+                     opencv_imgproc
+                     opencv_core
+                     boost_filesystem
+                     boost_system)
+
+set_target_properties("${PROJECT_NAME}" PROPERTIES
+                     CXX_STANDARD 11
+                     CXX_STANDARD_REQUIRED YES
+                     CXX_EXTENSIONS NO
+                 )
+
+add_library(opcenv_lib SHARED IMPORTED)
+
 #############
 ## Install ##
 #############
