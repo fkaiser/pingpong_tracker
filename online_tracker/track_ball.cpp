@@ -71,8 +71,16 @@ int circular_hough_extraction(const string filename)
 
 int main(int argc, char** argv)
 {
+    const char* home_dir = std::getenv("HOME");
+    if(home_dir) {
+        std::cout << "Your HOME dir is: " << home_dir << '\n';
+    } else {
+        std::cout << "Your HOME is not defined.:" << '\n';
+        return -1;
+    }
     const string file_ending = ".png";
-    const char* dir_name = "/home/fabian/Documents/images_ping_pong_tracker";
+    const std::string dir_name_rel = "/Documents/images_ping_pong_tracker";
+    std::string dir_name = std::string(home_dir) + dir_name_rel;
     const char* filename = argc >=2 ? argv[1] : "testimage.png";
     vector<fs::path> image_names;
     get_all(dir_name, file_ending, image_names);
