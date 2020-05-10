@@ -8,6 +8,7 @@ project(pingpong_tracker)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  cv_bridge
   image_transport
   roscpp
   sensor_msgs
@@ -176,7 +177,9 @@ set_target_properties("${PROJECT_NAME}" PROPERTIES
 add_library(opcenv_lib SHARED IMPORTED)
 
 add_executable (image_handler online_tracker/image_handler.cpp)
-target_link_libraries (image_handler  ${catkin_LIBRARIES})
+target_link_libraries (image_handler  
+                       ${catkin_LIBRARIES}
+                       )
 
 #############
 ## Install ##
