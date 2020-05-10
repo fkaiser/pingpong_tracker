@@ -54,7 +54,7 @@ int circular_hough_extraction(const string& path_name, const string& file_name, 
     vector<Vec3f> circles;
     HoughCircles(gray, circles, HOUGH_GRADIENT, 1,
                  gray.rows/16,  // change this value to detect circles with different distances to each other
-                 100, 30, 1, 30 // change the last two parameters
+                 100, 30, 20, 100 // change the last two parameters
             // (min_radius & max_radius) to detect larger circles
     );
     for( size_t i = 0; i < circles.size(); i++ )
@@ -119,7 +119,7 @@ int main(int argc, char** argv)
         return -1;
     }
     const string file_ending = ".png";
-    const std::string dir_name_rel = "/Documents/images_ping_pong_tracker";
+    const std::string dir_name_rel = "/Desktop/pingpong"; //"/Documents/images_ping_pong_tracker";
     const std::string dir_name = std::string(home_dir) + dir_name_rel;
     const std::string dir_name_save = dir_name + "/saved/";
     const char* filename = argc >=2 ? argv[1] : "testimage.png";
