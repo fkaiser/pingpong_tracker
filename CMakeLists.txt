@@ -7,7 +7,15 @@ project(pingpong_tracker)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED COMPONENTS
+  image_transport
+  roscpp
+  sensor_msgs
+)
+
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -166,6 +174,9 @@ set_target_properties("${PROJECT_NAME}" PROPERTIES
                  )
 
 add_library(opcenv_lib SHARED IMPORTED)
+
+add_executable (image_handler online_tracker/image_handler.cpp)
+target_link_libraries (image_handler  ${catkin_LIBRARIES})
 
 #############
 ## Install ##
