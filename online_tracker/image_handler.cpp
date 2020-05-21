@@ -84,7 +84,7 @@ public:
     : it_(nh_)
   {
     // Subscribe to input video feed and publish output video feed
-    image_sub_ = it_.subscribe("/raspicam_node/image/compressed", 1, &ImageConverter::imageCb, this);
+    image_sub_ = it_.subscribe("/raspicam_node/image", 1, &ImageConverter::imageCb, this);
     image_pub_ = it_.advertise("/image_converter/output_video", 1);
 
     //cv::namedWindow(OPENCV_WINDOW);
