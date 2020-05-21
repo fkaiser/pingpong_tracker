@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(pingpong_tracker)
+project(pingpong_tracker VERSION 1.1.0)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
