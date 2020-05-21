@@ -1,0 +1,3 @@
+<launch>
+    <node name="image_handler" pkg="pingpong_tracker" type="image_handler" />
+</launch>
