@@ -7,6 +7,7 @@
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
+#include <chrono> 
 
 /**
  * This tutorial demonstrates simple receipt of messages over the ROS system.
@@ -97,8 +98,8 @@ public:
 
   void imageCb(const sensor_msgs::ImageConstPtr& msg)
   {
-      ROS_INFO("Got raw image");
-      return;
+    // Record start time
+    auto start = std::chrono::high_resolution_clock::now(); 
     cv_bridge::CvImagePtr cv_ptr;
     try
     {
@@ -119,7 +120,7 @@ public:
     cv::HoughCircles(gray, circles, cv::HOUGH_GRADIENT, 1,
                   gray.rows/16,
                   100, 30, 20, 100);
-      ROS_INFO("Found circles: %d",int(circles.size()));
+      //ROS_INFO("Found circles: %d",int(circles.size()));
       for( size_t i = 0; i < circles.size(); i++ )
       {
           cv::Vec3i c = circles[i];
@@ -130,7 +131,10 @@ public:
           int radius = c[2];
           circle(src, center, radius, cv::Scalar(255,0,255), 3, cv::LINE_AA);
       }
-
+      // Record end time
+      auto finish = std::chrono::high_resolution_clock::now();
+      std::chrono::milliseconds elapsed = chrono::duration_cast<chrono::milliseconds>(end - start);
+      ROS_INFO("Execution time: %d ",int(elapsed.count()));
       // Output modified video stream
       image_pub_.publish(cv_ptr->toImageMsg());
     }
