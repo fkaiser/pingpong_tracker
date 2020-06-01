@@ -98,7 +98,7 @@ public:
   void imageCb(const sensor_msgs::ImageConstPtr& msg)
   {
       ROS_INFO("Got raw image");
-      return
+      return;
     cv_bridge::CvImagePtr cv_ptr;
     try
     {
