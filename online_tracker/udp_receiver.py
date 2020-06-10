@@ -6,16 +6,25 @@ def udp_opencv():
     if not cap.isOpened():
         print('VideoCapture not opened')
         exit(-1)
-
+    base_name = 'testimages/'
+    counter = 1
+    save = False
     while True:
         ret, frame = cap.read()
 
         if not ret:
             print('frame empty')
             break
-        hough_img = track_ball_hough(frame, show=True)
+        hough_img = track_ball_hough(frame)
         cv2.imshow('image', hough_img)
 
+        if save:
+            store_name = base_name + str(counter) + '.png'
+            cv2.imwrite(store_name, hough_img) 
+        if counter < 100:
+            counter += 1
+        else:
+            counter = 1
         if cv2.waitKey(1)&0XFF == ord('q'):
             break
 
@@ -28,7 +37,7 @@ def convert_to_grayscale(img):
         return gray
 
 
-def track_ball_hough(image, show=False, save=False, store_name='image.png'):
+def track_ball_hough(image):
         img = cv2.medianBlur(convert_to_grayscale(image), 5)
         cimg = image
         circles = cv2.HoughCircles(img ,cv2.HOUGH_GRADIENT,1,20,param1=50,param2=30,minRadius=10,maxRadius=30)
