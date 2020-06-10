@@ -1,5 +1,6 @@
 import socket
 import cv2
+import time
 
 def udp_opencv():
     cap = cv2.VideoCapture('udp://192.168.1.13:5001', cv2.CAP_FFMPEG)
@@ -7,11 +8,19 @@ def udp_opencv():
         print('VideoCapture not opened')
         exit(-1)
     base_name = 'testimages/'
-    counter = 1
-    save = False
+    counter = 0
+    counter_freq = 0
+    save = True
+    print('Starting')
+    start = time.time()
     while True:
         ret, frame = cap.read()
-
+        counter_freq += 1
+        if counter_freq > 600:
+            diff_time = time.time() - start
+            freq  = counter_freq / diff_time
+            print('Frequency is: {}'.format(freq))
+            break
         if not ret:
             print('frame empty')
             break
@@ -21,7 +30,7 @@ def udp_opencv():
         if save:
             store_name = base_name + str(counter) + '.png'
             cv2.imwrite(store_name, hough_img) 
-        if counter < 100:
+        if counter < 1000:
             counter += 1
         else:
             counter = 1
