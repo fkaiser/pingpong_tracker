@@ -4,8 +4,8 @@ import picamera
 
 # Connect a client socket to my_server:8000 (change my_server to the
 # hostname of your server)
-client_socket = socket.socket()
-client_socket.connect(('192.168.1.13', 8000))
+client_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+client_socket.connect(('192.168.1.13', 5001))
 
 # Make a file-like object out of the connection
 connection = client_socket.makefile('wb')
