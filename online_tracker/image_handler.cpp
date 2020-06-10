@@ -133,7 +133,7 @@ public:
       }
       // Record end time
       auto finish = std::chrono::high_resolution_clock::now();
-      std::chrono::milliseconds elapsed = chrono::duration_cast<chrono::milliseconds>(end - start);
+      std::chrono::milliseconds elapsed = std::chrono::duration_cast<chrono::milliseconds>(end - start);
       ROS_INFO("Execution time: %d ",int(elapsed.count()));
       // Output modified video stream
       image_pub_.publish(cv_ptr->toImageMsg());
