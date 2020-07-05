@@ -103,11 +103,21 @@ To test the algorithm in a live scenario, the following setup was used.
 
 After on the laptop, open file `upd_receiver.py` and adapt to the IP address to the one of your computer. To start tracker on the laptop type:
 
-`python udp_receiver.py`
+`python udp_receiver.py <IP address of receiver> <port number>`
+
+If you want to store the video in outpy.avi type:
+
+`python udp_receiver.py <IP address of receiver> <port number> --store_video`
+
+If you want to store processed frame in the folder testimages type:
+
+`python udp_receiver.py <IP address of receiver> --port <port number> --store_images`
+
+
 
 The RPI retrieved the video stream and sent it via UDP over WIFI network to the laptop. To catch the video on RPI and stream it via UDP to a certain address, type the following:
 
-`python clientVideo.py`
+`python clientVideo.py 192.168.1.13 --port <port number>`
 
 If everything works out, you should see a window open up with the tracker extracting the ball as shown below:
 
