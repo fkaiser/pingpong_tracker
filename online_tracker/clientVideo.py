@@ -8,11 +8,11 @@ import argparse
 # Connect a client socket to my_server:8000 (change my_server to the
 # hostname of your server)
 def stream_via_udp(ip, port):
-    scan_host()
     while True:
 
         receiver_ready = scan_host(host=ip, port=port)
-        if receiver_read == 0:
+        if receiver_ready == 0:
+            print('receiver ready')
             break
         else:
             print('Waiting until UDP receiver on ip {} and port {} is ready'.format(ip, port))
@@ -24,7 +24,7 @@ def stream_via_udp(ip, port):
     try:
         camera = picamera.PiCamera()
         camera.resolution = (640, 480)
-        camera.framerate = 80
+        camera.framerate = 30 
         # Start a preview and let the camera warm up for 2 seconds
         camera.start_preview()
         time.sleep(2)
@@ -45,7 +45,7 @@ def scan_host(host, port, r_code = 1) :
         if code == 0 : 
             r_code = code
         s.close()
-    except Exception, e : 
+    except Exception: 
         pass
     return r_code
 
