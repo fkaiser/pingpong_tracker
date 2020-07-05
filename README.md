@@ -117,7 +117,7 @@ If you want to store processed frame in the folder testimages type:
 
 The RPI retrieved the video stream and sent it via UDP over WIFI network to the laptop. To catch the video on RPI and stream it via UDP to a certain address, type the following:
 
-`python clientVideo.py 192.168.1.13 --port <port number>`
+`python clientVideo.py <IP address of receiver> --port <port number>`
 
 If everything works out, you should see a window open up with the tracker extracting the ball as shown below:
 
