@@ -8,6 +8,14 @@ import argparse
 # Connect a client socket to my_server:8000 (change my_server to the
 # hostname of your server)
 def stream_via_udp(ip, port):
+    scan_host()
+    while True:
+
+        receiver_ready = scan_host(host=ip, port=port)
+        if receiver_read == 0:
+            break
+        else:
+            print('Waiting until UDP receiver on ip {} and port {} is ready'.format(ip, port))
     client_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
     client_socket.connect((ip, port))
 
@@ -28,6 +36,19 @@ def stream_via_udp(ip, port):
     finally:
         connection.close()
         client_socket.close()
+
+
+def scan_host(host, port, r_code = 1) : 
+    try : 
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        code = s.connect_ex((host, port))
+        if code == 0 : 
+            r_code = code
+        s.close()
+    except Exception, e : 
+        pass
+    return r_code
+
 
 def main():
     parser = argparse.ArgumentParser()

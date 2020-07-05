@@ -5,14 +5,14 @@ import sys
 import os
 
 def udp_opencv():
-    cap = cv2.VideoCapture('udp://192.168.1.13:5001?overrun_nonfatal=1&fifo_size=50000000')
+    cap = cv2.VideoCapture('udp://192.168.1.13:5000?overrun_nonfatal=1&fifo_size=50000000')
     if not cap.isOpened():
         print('VideoCapture not opened')
         exit(-1)
     base_name = 'testimages/'
     counter = 0
     counter_freq = 0
-    save = True
+    save = False
     print('Starting')
     start = time.time()
     while True:
