@@ -1,16 +1,18 @@
 import socket
 import cv2
 import time
+import sys
+import os
 
 def udp_opencv():
-    cap = cv2.VideoCapture('udp://192.168.1.13:5001?overrun_nonfatal=1&fifo_size=50000000', cv2.CAP_FFMPEG)
+    cap = cv2.VideoCapture('udp://192.168.1.13:5001?overrun_nonfatal=1&fifo_size=50000000')
     if not cap.isOpened():
         print('VideoCapture not opened')
         exit(-1)
     base_name = 'testimages/'
     counter = 0
     counter_freq = 0
-    save = False
+    save = True
     print('Starting')
     start = time.time()
     while True:
@@ -71,4 +73,11 @@ def udp_raw():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('Interrupted')
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)
