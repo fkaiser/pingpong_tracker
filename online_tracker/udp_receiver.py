@@ -1,31 +1,39 @@
 import socket
 import cv2
+import time
+import sys
+import os
 
 def udp_opencv():
-    cap = cv2.VideoCapture('udp://192.168.1.13:5001', cv2.CAP_FFMPEG)
+    cap = cv2.VideoCapture('udp://192.168.1.13:5001?overrun_nonfatal=1&fifo_size=50000000')
     if not cap.isOpened():
         print('VideoCapture not opened')
         exit(-1)
     base_name = 'testimages/'
-    counter = 1
-    save = False
+    counter = 0
+    counter_freq = 0
+    save = True
+    print('Starting')
+    start = time.time()
     while True:
         ret, frame = cap.read()
-
+        counter_freq += 1
         if not ret:
             print('frame empty')
-            break
         hough_img = track_ball_hough(frame)
         cv2.imshow('image', hough_img)
 
         if save:
             store_name = base_name + str(counter) + '.png'
             cv2.imwrite(store_name, hough_img) 
-        if counter < 100:
+        if counter < 1000:
             counter += 1
         else:
             counter = 1
         if cv2.waitKey(1)&0XFF == ord('q'):
+            diff_time = time.time() - start
+            freq  = counter_freq / diff_time
+            print('Frequency is: {}'.format(freq))
             break
 
     cap.release()
@@ -40,7 +48,7 @@ def convert_to_grayscale(img):
 def track_ball_hough(image):
         img = cv2.medianBlur(convert_to_grayscale(image), 5)
         cimg = image
-        circles = cv2.HoughCircles(img ,cv2.HOUGH_GRADIENT,1,20,param1=50,param2=30,minRadius=10,maxRadius=30)
+        circles = cv2.HoughCircles(img ,cv2.HOUGH_GRADIENT,1,20,param1=50,param2=30,minRadius=10,maxRadius=50)
         if not circles is None:
             for i in circles[0,:]:
                 # draw the outer circle
@@ -65,4 +73,11 @@ def udp_raw():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('Interrupted')
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)

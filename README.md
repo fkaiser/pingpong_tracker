@@ -101,13 +101,13 @@ To test the algorithm in a live scenario, the following setup was used.
 
 ![rpi_cam](images_README/rpi_cam.png)
 
-The RPI retrieved the video stream and sent it via UDP over WIFI network to the laptop. To catch the video on RPI and stream it via UDP to a certain address, type the following:
-
-`ffmpeg -f v4l2 -framerate 30 -video_size 800x448 -i /dev/video0  -codec:v h264 -r 30 -s 800x448 -bf 0 -g 30 -bufsize 8000k -maxrate 8000k  -preset ultrafast -tune zerolatency -f h264 udp://<IP Address of laptop>:5001 -fflags nobuffer`
-
 After on the laptop, open file `upd_receiver.py` and adapt to the IP address to the one of your computer. To start tracker on the laptop type:
 
 `python udp_receiver.py`
+
+The RPI retrieved the video stream and sent it via UDP over WIFI network to the laptop. To catch the video on RPI and stream it via UDP to a certain address, type the following:
+
+`python clientVideo.py`
 
 If everything works out, you should see a window open up with the tracker extracting the ball as shown below:
 
