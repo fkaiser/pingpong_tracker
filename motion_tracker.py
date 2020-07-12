@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 from pathlib import Path
 from scipy.stats import norm
 
-
+# Next: Find criteria to compare different hists of extracted balls to decide which one is really ping pong ball and which not
 class motionTracker:
 
     def __init__(self, image_path, n_particles=20, sigma_init_pos=40,
@@ -38,13 +38,24 @@ class motionTracker:
             self.target_ROI = self.get_ROI(self.image)
             self.get_target_hist()
             self.init_particles()
-    
+
+    def compute_circle_hist(self, circle, img):
+        height,width = img.shape
+        mask_circle = np.zeros((height,width), np.uint8)
+        cv2.circle(mask_circle,(circle[0],circle[1]),circle[2], 1,thickness=-1)
+        masked_data = cv2.bitwise_and(img, img, mask=mask_circle)
+        mask_circle_boolean = mask_circle <= 0
+        masked_array = np.ma.array(masked_data, mask=mask_circle_boolean)
+        ball_hist = np.histogram(masked_array[~mask_circle_boolean].data)
+        return ball_hist
+
     def track_ball_hough(self, show=False, save=False, store_name='image.png'):
         img = cv2.medianBlur(self.convert_to_grayscale(self.image), 5)
         cimg = self.image
         circles = cv2.HoughCircles(img ,cv2.HOUGH_GRADIENT,1,20,param1=50,param2=30,minRadius=10,maxRadius=30)
         if not circles is None:
             for i in circles[0,:]:
+                self.compute_circle_hist(i, self.convert_to_grayscale(cimg))
                 # draw the outer circle
                 cv2.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2)
                 # draw the center of the circle
