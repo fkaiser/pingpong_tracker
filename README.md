@@ -78,6 +78,8 @@ To start the tracker type:
 
 `python motion_tracker.py  <path to folder with frames> --method hough`
 
+Please note, you can supply the option `--frame_period <frame period in seconds>` if you do not have the time difference file available. Algorithm assume then constant time differences between frames. 
+
 As an example of the circular hough tracker in the image below the green circle respectively the red dot show the estimated circle respectively the mid point of the circle.
 
 ![hough](images_README/hough_tracker.png)

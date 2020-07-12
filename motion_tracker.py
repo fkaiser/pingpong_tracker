@@ -266,11 +266,14 @@ class motionTracker:
 
 class imageSamples:
 
-    def __init__(self, path_to_images, image_formater='.png'):
+    def __init__(self, path_to_images, image_formater='.png', frame_period=None):
         self.path_to_images = path_to_images
         self.framelist = sorted(glob.glob(self.path_to_images + '/*' +
                                           image_formater))
-        self.read_timestamps()
+        if not frame_period:
+            self.read_timestamps()
+        else:
+            self.dt = np.full(len(self.framelist), frame_period, dtype=float)
         self.image_dt_list = list(zip(self.framelist, self.dt))
 
     def read_timestamps(self, filename='timestamps.json'):
@@ -290,7 +293,8 @@ def main():
     parser.add_argument('--n_particle', default=20, type=int,
                         help='Option to define number of particles.')
     parser.add_argument('--show_particles', '-sh', action='store_true',
-                        help='Option to show each frame with particles')
+                        help='Option to show each frame with particles. \
+                              Press key n to continue to next frame')
     parser.add_argument('--save_frames', '-s', action='store_true',
                         help='Option to store processed frames.')
     parser.add_argument('--start_image', default=1, type=int,
@@ -303,9 +307,10 @@ def main():
                        in the folder sorted by image name.')
     parser.add_argument('--method', default='particle', type=str, help='Method of how tracker should work.\
                        Options are: particle, hough')
+    parser.add_argument('--frame_period', default=None, type=float, help='Delta time period between frames')
     args = parser.parse_args()
     image_folder = args.frames_folder
-    images = imageSamples(path_to_images=image_folder)
+    images = imageSamples(path_to_images=image_folder, frame_period=args.frame_period)
     start_image = args.start_image
     save_path = image_folder + 'processed/'
     particle_filter = True if args.method == 'particle' else False
@@ -321,7 +326,7 @@ def main():
     
     time_list = []
     for (image_path_m, dt) in considered_list:
-        match_obj = re.search('.*(image[0-9]*).png', image_path_m)
+        match_obj = re.search('.*([0-9]*).png', image_path_m)
         if match_obj:
             store_name = save_path + match_obj.group(1) + '.png'
         else:
