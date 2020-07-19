@@ -50,15 +50,19 @@ class motionTracker:
         ball_hist = np.histogram(data_ball, bins=20, range=(0, 256))
         return (masked_data, ball_hist, data_ball)
 
-    def track_ball_hough(self, show=False, save=False, store_name='image.png'):
+    def track_ball_hough(self, show=False, save=False, store_name='image.png', target_radius=26):
         img = cv2.medianBlur(self.convert_to_grayscale(self.image), 5)
         cimg = self.image
-        circles = cv2.HoughCircles(img ,cv2.HOUGH_GRADIENT,1,20,param1=50,param2=30,minRadius=10,maxRadius=30)
+        radius_variation = 5
+        circles = cv2.HoughCircles(img ,cv2.HOUGH_GRADIENT,1,20,param1=50,param2=30,
+                                   minRadius=target_radius - radius_variation,
+                                   maxRadius=target_radius + radius_variation)
         circle_hists = dict()
         if not circles is None:
             for i in range(len(circles[0,:])):
                 circle = circles[0,i]
-                circle_hists[i] = {'masked_data': None, 'ball_hist': None, 'data_ball': None }
+                circle_hists[i] = {'masked_data': None, 'ball_hist': None, 'data_ball': None,
+                                    'radius': circle[2]}
                 (circle_hists[i]['masked_data'], circle_hists[i]['ball_hist'],
                 circle_hists[i]['data_ball']) = self.compute_circle_hist(circle, self.convert_to_grayscale(cimg))
                 # draw the outer circle
@@ -67,20 +71,20 @@ class motionTracker:
                 cv2.circle(cimg,(circle[0],circle[1]),2,(0,0,255),3)
         
         if show:
-            # while True:
+            plt.figure(figsize=(20, 12))
             plt.subplot(len(circle_hists) + 1, 2, 1)
             plt.title('Detected circles')
             plt.imshow(cimg[..., ::-1])
-            for i in range(len(circles[0,:])):
-                    plt.subplot(len(circle_hists) + 1, 2, 3 + i * 2)
-                    plt.imshow(circle_hists[i]['masked_data'], cmap='gray', vmin=0, vmax=255)
-                    plt.title('Extracted ball: {}'.format(str(i)))
-                    plt.subplot(len(circle_hists) + 1, 2, 4 + i * 2)
-                    plt.hist(circle_hists[i]['data_ball'], bins=10, range=(0,256))
-                    plt.title('Hist of ball: {}'.format(str(i)))
+            if not circles is None:
+                for i in range(len(circles[0,:])):
+                        plt.subplot(len(circle_hists) + 1, 2, 3 + i * 2)
+                        plt.imshow(circle_hists[i]['masked_data'], cmap='gray', vmin=0, vmax=255)
+                        plt.title('Extracted ball: {0} with radius: {1}'.format(str(i),
+                        str(round(circle_hists[i]['radius'],1))))
+                        plt.subplot(len(circle_hists) + 1, 2, 4 + i * 2)
+                        plt.hist(circle_hists[i]['data_ball'], bins=50, range=(0,255))
+                        plt.title('Hist of ball: {}'.format(str(i)))
             plt.show()
-                # if cv2.waitKey(1) % 0xff == ord('n'):
-                #     break
         if save:
             cv2.imwrite(store_name, cimg) 
         cv2.destroyAllWindows()
@@ -334,6 +338,7 @@ def main():
     parser.add_argument('--method', default='particle', type=str, help='Method of how tracker should work.\
                        Options are: particle, hough')
     parser.add_argument('--frame_period', default=None, type=float, help='Delta time period between frames')
+    parser.add_argument('--target_radius', default=26, type=int, help='Radius of target ball size in pixels')
     args = parser.parse_args()
     image_folder = args.frames_folder
     images = imageSamples(path_to_images=image_folder, frame_period=args.frame_period)
@@ -370,7 +375,8 @@ def main():
                 save=args.save_frames, store_name=store_name)
         elif args.method == 'hough':
             ping_pong_tracker.track_ball_hough(show=args.show_particles,
-                save=args.save_frames, store_name=store_name)
+                save=args.save_frames, store_name=store_name,
+                target_radius=args.target_radius)
         time_dt = time.time() - time_start
         print('time_dt: {}'.format(time_dt))
         time_list.append(time_dt)
