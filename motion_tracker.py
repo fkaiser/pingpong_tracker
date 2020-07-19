@@ -21,7 +21,8 @@ class motionTracker:
                  n_states=4, n_bins=50, show_extended=False, particle_filter=True):
         self.image_path = image_path
         self.image = self.load_image(self.image_path)
-        
+        self.ball_center = np.zeros((1,2))
+
         if particle_filter:
             self.n_particles = n_particles
             self.sigma_init_pos = sigma_init_pos
@@ -58,6 +59,14 @@ class motionTracker:
                                    minRadius=target_radius - radius_variation,
                                    maxRadius=target_radius + radius_variation)
         circle_hists = dict()
+        # Update the position of the ball center
+        min_distance = -1
+        if not circles is None:
+            for i in range(len(circles[0,:])):
+                circle = circles[0,i]
+                if min_distance < 0 or np.abs(circle[2] - target_radius) < min_distance:
+                    self.ball_center[0, 0] = circle[0]
+                    self.ball_center[0, 1] = circle[1]
         if not circles is None:
             for i in range(len(circles[0,:])):
                 circle = circles[0,i]
@@ -76,6 +85,7 @@ class motionTracker:
             plt.title('Detected circles')
             plt.imshow(cimg[..., ::-1])
             if not circles is None:
+                plt.plot(self.ball_center[0, 0], self.ball_center[0, 1],'rx',label='Center');
                 for i in range(len(circles[0,:])):
                         plt.subplot(len(circle_hists) + 1, 2, 3 + i * 2)
                         plt.imshow(circle_hists[i]['masked_data'], cmap='gray', vmin=0, vmax=255)
