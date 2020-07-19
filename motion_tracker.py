@@ -46,26 +46,41 @@ class motionTracker:
         masked_data = cv2.bitwise_and(img, img, mask=mask_circle)
         mask_circle_boolean = mask_circle <= 0
         masked_array = np.ma.array(masked_data, mask=mask_circle_boolean)
-        ball_hist = np.histogram(masked_array[~mask_circle_boolean].data)
-        return ball_hist
+        data_ball = masked_array[~mask_circle_boolean].data
+        ball_hist = np.histogram(data_ball, bins=20, range=(0, 256))
+        return (masked_data, ball_hist, data_ball)
 
     def track_ball_hough(self, show=False, save=False, store_name='image.png'):
         img = cv2.medianBlur(self.convert_to_grayscale(self.image), 5)
         cimg = self.image
         circles = cv2.HoughCircles(img ,cv2.HOUGH_GRADIENT,1,20,param1=50,param2=30,minRadius=10,maxRadius=30)
+        circle_hists = dict()
         if not circles is None:
-            for i in circles[0,:]:
-                self.compute_circle_hist(i, self.convert_to_grayscale(cimg))
+            for i in range(len(circles[0,:])):
+                circle = circles[0,i]
+                circle_hists[i] = {'masked_data': None, 'ball_hist': None, 'data_ball': None }
+                (circle_hists[i]['masked_data'], circle_hists[i]['ball_hist'],
+                circle_hists[i]['data_ball']) = self.compute_circle_hist(circle, self.convert_to_grayscale(cimg))
                 # draw the outer circle
-                cv2.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2)
+                cv2.circle(cimg,(circle[0],circle[1]),circle[2],(0,255,0),2)
                 # draw the center of the circle
-                cv2.circle(cimg,(i[0],i[1]),2,(0,0,255),3)
+                cv2.circle(cimg,(circle[0],circle[1]),2,(0,0,255),3)
         
         if show:
-            while True:
-                cv2.imshow('detected circles',cimg)
-                if cv2.waitKey(1) % 0xff == ord('n'):
-                    break
+            # while True:
+            plt.subplot(len(circle_hists) + 1, 2, 1)
+            plt.title('Detected circles')
+            plt.imshow(cimg[..., ::-1])
+            for i in range(len(circles[0,:])):
+                    plt.subplot(len(circle_hists) + 1, 2, 3 + i * 2)
+                    plt.imshow(circle_hists[i]['masked_data'], cmap='gray', vmin=0, vmax=255)
+                    plt.title('Extracted ball: {}'.format(str(i)))
+                    plt.subplot(len(circle_hists) + 1, 2, 4 + i * 2)
+                    plt.hist(circle_hists[i]['data_ball'], bins=10, range=(0,256))
+                    plt.title('Hist of ball: {}'.format(str(i)))
+            plt.show()
+                # if cv2.waitKey(1) % 0xff == ord('n'):
+                #     break
         if save:
             cv2.imwrite(store_name, cimg) 
         cv2.destroyAllWindows()
