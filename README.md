@@ -88,6 +88,10 @@ An example video of the tracker is given in:
 
 ![hough_tracker](images_README/hough_tracker.mp4)
 
+## Specify target radius size
+Since the distance to the ping pong table is known it is possible to limit the size of the extracted ball. By passing the argument `--target_radius`, one can specify the expected radius of the extracted ball. The algorithm will then limit the allowed ball size to be within a range of +/- pixels of the given expected radius. An example of an extracted ball including the histogram of the extracted ball is shown below:
+![hough_example](images_README/hough_example.png)
+
 ## Creating video from stored processed frames
 You can select the option to store the processed frames similar to the image shown in the last section. If you want to create a video based on those frames, you can use the script video_from_frame.sh by typing:
 
