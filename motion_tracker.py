@@ -12,7 +12,9 @@ from matplotlib import pyplot as plt
 from pathlib import Path
 from scipy.stats import norm
 
-# Next: Find criteria to compare different hists of extracted balls to decide which one is really ping pong ball and which not
+PINGPONG_DIAMETER_CM = 4
+
+# Next: Estimate velocity of ball movement
 class motionTracker:
 
     def __init__(self, image_path, n_particles=20, sigma_init_pos=40,
@@ -21,7 +23,11 @@ class motionTracker:
                  n_states=4, n_bins=50, show_extended=False, particle_filter=True):
         self.image_path = image_path
         self.image = self.load_image(self.image_path)
-        self.ball_center = np.zeros((1,2))
+        frames_to_process = 200
+        self.ball_center = np.zeros((frames_to_process,1,2))
+        self.ball_radius = np.zeros((frames_to_process,1,1))
+        self.ball_center_vel = np.zeros(( frames_to_process,1,2))
+        self.frame_count = -1
 
         if particle_filter:
             self.n_particles = n_particles
@@ -51,7 +57,9 @@ class motionTracker:
         ball_hist = np.histogram(data_ball, bins=20, range=(0, 256))
         return (masked_data, ball_hist, data_ball)
 
-    def track_ball_hough(self, show=False, save=False, store_name='image.png', target_radius=26):
+    def track_ball_hough(self, show=False, save=False, store_name='image.png',
+                         target_radius=26, dt=1/25):
+        self.frame_count += 1
         img = cv2.medianBlur(self.convert_to_grayscale(self.image), 5)
         cimg = self.image
         radius_variation = 5
@@ -62,11 +70,27 @@ class motionTracker:
         # Update the position of the ball center
         min_distance = -1
         if not circles is None:
+            new_pos = np.zeros((1,2))
+            if self.frame_count > 0:
+                new_pos[0,0] = self.ball_center[self.frame_count - 1,0,0]
+                new_pos[0,1] = self.ball_center[self.frame_count - 1,0,1]
             for i in range(len(circles[0,:])):
                 circle = circles[0,i]
                 if min_distance < 0 or np.abs(circle[2] - target_radius) < min_distance:
-                    self.ball_center[0, 0] = circle[0]
-                    self.ball_center[0, 1] = circle[1]
+                    new_pos[0,0] = circle[0]
+                    new_pos[0,1] = circle[1]
+                    self.ball_radius[self.frame_count,0,0] =  circle[2]
+            if self.frame_count > 0:
+                cm_per_pixel = None
+                if self.ball_radius[self.frame_count,0,0] > 0:
+                    cm_per_pixel = PINGPONG_DIAMETER_CM / (2 * self.ball_radius[self.frame_count,0,0])
+                self.ball_center_vel[self.frame_count,0,0] = (new_pos[0,0] - 
+                                                          self.ball_center[self.frame_count - 1, 0,0]) / dt * cm_per_pixel
+                self.ball_center_vel[self.frame_count,0,1] = (new_pos[0,1] - 
+                                                          self.ball_center[self.frame_count - 1,0,1]) / dt * cm_per_pixel
+            
+            self.ball_center[self.frame_count,0,0] = new_pos[0,0]
+            self.ball_center[self.frame_count,0,1] = new_pos[0,1]
         if not circles is None:
             for i in range(len(circles[0,:])):
                 circle = circles[0,i]
@@ -80,18 +104,22 @@ class motionTracker:
                 cv2.circle(cimg,(circle[0],circle[1]),2,(0,0,255),3)
         
         if show:
-            plt.figure(figsize=(20, 12))
-            plt.subplot(len(circle_hists) + 1, 2, 1)
+            fig = plt.figure(figsize=(20, 12))
+            ax1 = fig.add_subplot(len(circle_hists) + 1, 2, 1)
             plt.title('Detected circles')
             plt.imshow(cimg[..., ::-1])
+            ax2 = fig.add_subplot(len(circle_hists) + 1, 2, 2)
+            plt.plot(np.linalg.norm(self.ball_center_vel[:self.frame_count+1,0,:], axis=1))
+            ax2.set_ylabel('cm/s')
+            plt.title('Ball speed')
             if not circles is None:
-                plt.plot(self.ball_center[0, 0], self.ball_center[0, 1],'rx',label='Center');
+                #plt.plot(self.ball_center[self.frame_count,0, 0], self.ball_center[self.frame_count,0, 1],'rx',label='Center');
                 for i in range(len(circles[0,:])):
-                        plt.subplot(len(circle_hists) + 1, 2, 3 + i * 2)
+                        fig.add_subplot(len(circle_hists) + 1, 2, 3 + i * 2)
                         plt.imshow(circle_hists[i]['masked_data'], cmap='gray', vmin=0, vmax=255)
                         plt.title('Extracted ball: {0} with radius: {1}'.format(str(i),
                         str(round(circle_hists[i]['radius'],1))))
-                        plt.subplot(len(circle_hists) + 1, 2, 4 + i * 2)
+                        fig.add_subplot(len(circle_hists) + 1, 2, 4 + i * 2)
                         plt.hist(circle_hists[i]['data_ball'], bins=50, range=(0,255))
                         plt.title('Hist of ball: {}'.format(str(i)))
             plt.show()
@@ -386,7 +414,7 @@ def main():
         elif args.method == 'hough':
             ping_pong_tracker.track_ball_hough(show=args.show_particles,
                 save=args.save_frames, store_name=store_name,
-                target_radius=args.target_radius)
+                target_radius=args.target_radius, dt=dt)
         time_dt = time.time() - time_start
         print('time_dt: {}'.format(time_dt))
         time_list.append(time_dt)
