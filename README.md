@@ -60,7 +60,7 @@ As an example of the tracker a black ball is used as a pendulum. The tracker tri
 
 ![pendulum](images_README/pend_tracker.png)
 
-The correspoding video can be found in:
+The corresponding video can be found in:
 
 ![pendulum_ball](images_README/pendulum_ball.mp4)
 
@@ -91,6 +91,27 @@ An example video of the tracker is given in:
 ## Specify target radius size
 Since the distance to the ping pong table is known it is possible to limit the size of the extracted ball. By passing the argument `--target_radius <target radius>`, one can specify the expected radius of the extracted ball. The algorithm will then limit the allowed ball size to be within a range of +/- 5 pixels of the given expected radius. An example of an extracted ball including the histogram of the extracted ball is shown below:
 ![hough_example](images_README/hough_example.png)
+
+## Velocity estimate
+The velocity of the ball is estimated by taking the difference of the ball center's position between two sequential frames i.e.
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=v_{ball}[i]]&space;=&space;\frac{\vec{x}[i]&space;-&space;\vec{x}[i&space;-&space;1]}{dt}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?v_{ball}[i]]&space;=&space;\frac{\vec{x}[i]&space;-&space;\vec{x}[i&space;-&space;1]}{dt}" title="v_{ball}[i]] = \frac{\vec{x}[i] - \vec{x}[i - 1]}{dt}" /></a>
+
+With `dt` being the frame period. The above quantity has dimensions `[pixels/s]`. We can transform it into a metric entity i.e. 
+`[cm/dt]` by leveraging the prior information about the ball's diameter. Since we know the ball's diameter is 40cm and we know the diameter of the extracted ball in pixels for the `i-th` frame (`d[i]`), we can compute the metric velocity of the ball with:
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=v_{ball}[i]]_m&space;=&space;v_{ball}[i]]&space;\frac{40~cm}{d[i]]}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?v_{ball}[i]]_m&space;=&space;v_{ball}[i]]&space;\frac{40~cm}{d[i]]}" title="v_{ball}[i]]_m = v_{ball}[i]] \frac{40~cm}{d[i]]}" /></a>
+
+The norm of the velocity vector of the pendulum frame series is shown in top right plot below:
+
+![vel_pendelum](images_README/velocity_pendelum.png)
+
+A video of this pendulum example with the velocity estimate is given in:
+
+![velocity_pendelum_video](images_README/vel_pendelum.mp4)
+
+
+
 
 ## Creating video from stored processed frames
 You can select the option to store the processed frames similar to the image shown in the last section. If you want to create a video based on those frames, you can use the script video_from_frame.sh by typing:
