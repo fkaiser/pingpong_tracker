@@ -14,7 +14,7 @@ from scipy.stats import norm
 
 PINGPONG_DIAMETER_CM = 4
 
-# Next: 1) Show arrow of velocity estimate in plot
+# Next: 1) Show arrow of velocity estimate in plot + past trajectory
 class motionTracker:
 
     def __init__(self, image_path, n_particles=20, sigma_init_pos=40,

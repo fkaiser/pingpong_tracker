@@ -100,7 +100,7 @@ The velocity of the ball is estimated by taking the difference of the ball cente
 With `dt` being the frame period. The above quantity has dimensions `[pixels/s]`. We can transform it into a metric entity i.e. 
 `[cm/dt]` by leveraging the prior information about the ball's diameter. Since we know the ball's diameter is 4 cm and we know the diameter of the extracted ball in pixels for the `i-th` frame (`d[i]`) from the circular Hough transform, we can compute the metric velocity of the ball with:
 
-<a href="https://www.codecogs.com/eqnedit.php?latex=v_{ball}[i]_m&space;=&space;v_{ball}[i]&space;\frac{40~cm}{d[i]]}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?v_{ball}[i]_m&space;=&space;v_{ball}[i]&space;\frac{40~cm}{d[i]]}" title="v_{ball}[i]_m = v_{ball}[i] \frac{40~cm}{d[i]]}" /></a>
+<a href="https://www.codecogs.com/eqnedit.php?latex=v_{ball}[i]_m&space;=&space;v_{ball}[i]&space;\frac{4~cm}{d[i]]}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?v_{ball}[i]_m&space;=&space;v_{ball}[i]&space;\frac{4~cm}{d[i]]}" title="v_{ball}[i]_m = v_{ball}[i] \frac{4~cm}{d[i]]}" /></a>
 
 The norm of the velocity vector of the pendulum frame series is shown in top right plot below:
 
