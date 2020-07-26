@@ -14,16 +14,16 @@ from scipy.stats import norm
 
 PINGPONG_DIAMETER_CM = 4
 
-# Next: Estimate velocity of ball movement
+# Next: 1) Show arrow of velocity estimate in plot
 class motionTracker:
 
     def __init__(self, image_path, n_particles=20, sigma_init_pos=40,
                  sigma_init_vel=1, process_noise_pos_sigma=25,
                  process_noise_vel_sigma=20, measurement_noise=20, n_steps=100,
-                 n_states=4, n_bins=50, show_extended=False, particle_filter=True):
+                 n_states=4, n_bins=50, show_extended=False, particle_filter=True,
+                 frames_to_process=1):
         self.image_path = image_path
         self.image = self.load_image(self.image_path)
-        frames_to_process = 200
         self.ball_center = np.zeros((frames_to_process,1,2))
         self.ball_radius = np.zeros((frames_to_process,1,1))
         self.ball_center_vel = np.zeros(( frames_to_process,1,2))
@@ -58,7 +58,7 @@ class motionTracker:
         return (masked_data, ball_hist, data_ball)
 
     def track_ball_hough(self, show=False, save=False, store_name='image.png',
-                         target_radius=26, dt=1/25):
+                         target_radius=26, dt=1/25, frames_to_process=-1):
         self.frame_count += 1
         img = cv2.medianBlur(self.convert_to_grayscale(self.image), 5)
         cimg = self.image
@@ -103,17 +103,22 @@ class motionTracker:
                 # draw the center of the circle
                 cv2.circle(cimg,(circle[0],circle[1]),2,(0,0,255),3)
         
-        if show:
+        if show or save:
             fig = plt.figure(figsize=(20, 12))
             ax1 = fig.add_subplot(len(circle_hists) + 1, 2, 1)
             plt.title('Detected circles')
             plt.imshow(cimg[..., ::-1])
             ax2 = fig.add_subplot(len(circle_hists) + 1, 2, 2)
-            plt.plot(np.linalg.norm(self.ball_center_vel[:self.frame_count+1,0,:], axis=1))
-            ax2.set_ylabel('cm/s')
-            plt.title('Ball speed')
+            plt.plot(np.linalg.norm(self.ball_center_vel[:self.frame_count+1,0,:], axis=1),
+                    linestyle='--', marker='o', color='b')
+            ax2.set_ylabel('[cm/s]')
+            ax2.set_xlabel('frame')
+            ax2.grid(True)
+            ax2.set_ylim(0,20)
+            if frames_to_process > 0:
+                ax2.set_xlim(0,frames_to_process)
+            plt.title('Ball speed [cm/s]')
             if not circles is None:
-                #plt.plot(self.ball_center[self.frame_count,0, 0], self.ball_center[self.frame_count,0, 1],'rx',label='Center');
                 for i in range(len(circles[0,:])):
                         fig.add_subplot(len(circle_hists) + 1, 2, 3 + i * 2)
                         plt.imshow(circle_hists[i]['masked_data'], cmap='gray', vmin=0, vmax=255)
@@ -122,10 +127,14 @@ class motionTracker:
                         fig.add_subplot(len(circle_hists) + 1, 2, 4 + i * 2)
                         plt.hist(circle_hists[i]['data_ball'], bins=50, range=(0,255))
                         plt.title('Hist of ball: {}'.format(str(i)))
-            plt.show()
+            
         if save:
-            cv2.imwrite(store_name, cimg) 
-        cv2.destroyAllWindows()
+                plt.savefig(store_name, bbox_inches='tight')
+        if show:
+            plt.draw()
+            plt.waitforbuttonpress(0)
+        if save or show:
+            plt.close()
 
     def get_new_image(self, image_path):
         self.image_path = image_path
@@ -336,8 +345,7 @@ class imageSamples:
 
     def __init__(self, path_to_images, image_formater='.png', frame_period=None):
         self.path_to_images = path_to_images
-        self.framelist = sorted(glob.glob(self.path_to_images + '/*' +
-                                          image_formater))
+        self.framelist = sorted(glob.glob(self.path_to_images + '/*' + image_formater), key=self.extract_number)
         if not frame_period:
             self.read_timestamps()
         else:
@@ -352,6 +360,13 @@ class imageSamples:
                                for time_stamp in data['frames']]
             self.dt = np.diff(self.timestamps)
             self.dt = np.insert(self.dt, 0, 0.0)
+    
+    def extract_number(self, name):
+        match_obj = re.search('([0-9]+)\.png', name)
+        number = -1
+        if match_obj:
+            number = int(match_obj.group(1))
+        return number
 
 
 def main():
@@ -381,23 +396,27 @@ def main():
     image_folder = args.frames_folder
     images = imageSamples(path_to_images=image_folder, frame_period=args.frame_period)
     start_image = args.start_image
-    save_path = image_folder + 'processed/'
+    save_path = image_folder + '/processed/'
     particle_filter = True if args.method == 'particle' else False
     if args.save_frames and not os.path.isdir(save_path):
         os.mkdir(save_path)
-    ping_pong_tracker = motionTracker(
-        image_path=images.image_dt_list[start_image][0],
-        n_particles=args.n_particle, particle_filter=particle_filter)
     if args.end_image < 0:
         considered_list = images.image_dt_list[start_image + 1:]
     else:
         considered_list = images.image_dt_list[start_image + 1:args.end_image + 1]
     
+    frames_to_process = len(considered_list)
+    
+    ping_pong_tracker = motionTracker(
+        image_path=images.image_dt_list[start_image][0],
+        n_particles=args.n_particle, particle_filter=particle_filter,
+        frames_to_process=frames_to_process)
     time_list = []
     for (image_path_m, dt) in considered_list:
-        match_obj = re.search('.*([0-9]*).png', image_path_m)
+        match_obj = re.search('([0-9]*).png', image_path_m)
         if match_obj:
-            store_name = save_path + match_obj.group(1) + '.png'
+            digits = len(match_obj.group(1))
+            store_name = save_path + 'image' + '0'* (4 - digits) + match_obj.group(1) + '.png'
         else:
             print('Error: image to be processed {} in wrong format'.format(image_path_m))
             return
@@ -414,7 +433,8 @@ def main():
         elif args.method == 'hough':
             ping_pong_tracker.track_ball_hough(show=args.show_particles,
                 save=args.save_frames, store_name=store_name,
-                target_radius=args.target_radius, dt=dt)
+                target_radius=args.target_radius, dt=dt,
+                frames_to_process=frames_to_process)
         time_dt = time.time() - time_start
         print('time_dt: {}'.format(time_dt))
         time_list.append(time_dt)
