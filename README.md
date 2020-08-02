@@ -128,13 +128,13 @@ To test the algorithm in a live scenario, the following setup was used.
 
 ![rpi_cam](images_README/rpi_cam.png)
 
-After on the laptop, open file `upd_receiver.py` and adapt to the IP address to the one of your computer. To start tracker on the laptop type:
+To start with, open file `upd_receiver.py` and adapt to the IP address to the one of your computer. To start tracker on the laptop type:
 
-`python udp_receiver.py <IP address of receiver> <port number>`
+`python udp_receiver.py <IP address of RPI> --port <port number>`
 
 If you want to store the video in outpy.avi type:
 
-`python udp_receiver.py <IP address of receiver> <port number> --store_video`
+`python udp_receiver.py <IP address of RPI> --port <port number> --store_video`
 
 If you want to store processed frame in the folder testimages type:
 

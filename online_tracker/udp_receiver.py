@@ -55,6 +55,7 @@ def convert_to_grayscale(img):
 
 
 def track_ball_hough(image):
+        return image
         img = cv2.medianBlur(convert_to_grayscale(image), 5)
         cimg = image
         circles = cv2.HoughCircles(img ,cv2.HOUGH_GRADIENT,1,20,param1=50,param2=30,minRadius=10,maxRadius=50)

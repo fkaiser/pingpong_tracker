@@ -22,8 +22,8 @@ def stream_via_udp(ip, port):
     # Make a file-like object out of the connection
     connection = client_socket.makefile('wb')
     try:
-        camera = picamera.PiCamera()
-        camera.resolution = (640, 480)
+        camera = picamera.PiCamera() # 136cm 200 cm
+        camera.resolution = (1280,720)#(640, 480)
         camera.framerate = 30 
         # Start a preview and let the camera warm up for 2 seconds
         camera.start_preview()
